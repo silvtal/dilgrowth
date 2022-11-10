@@ -75,6 +75,14 @@ simulate_timeseries <- function (counts_data,
     abun_total <- sum(start) # número de individuos al que dejaremos crecer antes de volver a diluir cada vez
   }
   
+  # if keep_all_timesteps, initialize data.frame with starting abundances
+  if (keep_all_timesteps){
+    trajectory <- matrix(NA, ncol=len, nrow = no_of_dil+1)
+    rownames(trajectory) <- 0:no_of_dil
+    colnames(trajectory) <- names(start)
+    trajectory["0",]=start
+  } 
+  
   # y el "zero counter"
   empty <- start
   empty[1:length(empty)] <- 0
@@ -126,13 +134,22 @@ simulate_timeseries <- function (counts_data,
     }
     names(this_timestep) <- ns
     dil <- dil + 1
+    
+    if (keep_all_timesteps){
+    # una vez crecidos, se puede diluir de nuevo: siguiente iteración del bucle
+    # pero si keep_all(...), antes "secuenciamos" (guardamos las abundancias)
+      trajectory[as.character(dil),]=this_timestep[colnames(trajectory)] # order by "trajectory" column names just in case
+    }
   }
   if (max(this_timestep)/sum(this_timestep) >= fixation_at) {
     write(paste0(fixation_at*100, "% fixation of ",
                  names(this_timestep)[this_timestep!=0], " after ", dil, " dilutions."), stdout())
   }
-  return(this_timestep)
-}
+  if (keep_all_timesteps){
+    return(trajectory)
+  } else {
+    return(this_timestep)
+  }}
 
 
 
