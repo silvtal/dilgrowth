@@ -47,16 +47,6 @@ start_time <- Sys.time()
 ##   número de individuos de un PCG es demasiado bajo, se avisa al usuario de
 ##   que el factor de dilución debe cambiarse para evitar una posible extinción
 ##   del mismo, que sí podría ocurrir en la vida real.
-
-## =============================================================================
-## TODOs
-# TODO 113 recuperar la opción, poner exit (dejar que muera). Porque yo quiero
-#  un factor de dilución que me permita fijacion, si esto falla el factor de dil
-#  esta mal
-# TODO 146 también checar que no haya fijación. Si sí, guardar cuántas transfers
-# TODO 128 3 es ridículo, pensar uno más grande
-#
-# - [ ] (0) Idea: en vez de pickear un bicho tras otro, bucle largo, tras cada dilucion... lo que se haria es multiplicar todos por 2 una y otra vez. en la ultima iteracion seria 1.35 o 1.78 o lo necesario para no pasarse mucho. Digi "mucho" porque podríamos pasarnos debido al : ruido. el ruido sería un margen arbitrario (entre 0 y 0.1, o 0.5, o 1...) que se suma o resta a cada "2" para cada bicho. Random. Entonces algunos bichos estaran por debajo en una iter, otros por encima... 
 ## =============================================================================
 
 # ===========
@@ -193,50 +183,50 @@ if (fix_percentage) {
 }
 
 # initial total abundance
-total_counts <- sum(exp[s])
+total_counts <- sum(exp[s]) 
 # final total abundance
 abun_total   <- round(total_counts * perc)
 
 # check first if there's anything to simulate
-if (sum(counts) == 0) {
+if (total_counts == 0) {
   message(paste0("There are no detectable OTUs in initial sample ",
                  s, ". Moving to next PCG..."))
 } else if (total_counts * dilution < 3) {
   stop("EXIT: 3 or less bugs will be left after diluting! Consider changing your dilution factor.")
   
-  # start simulations if everything's OK
+# start simulations if everything's OK
 } else {
   abund_temp <- mclapply(X = 1:no_of_simulations,
-                         FUN = function(iter) {
-                           
-                           # 1) simulation
-                           
-                           if (abun_total == 0) { # we can't simulate anything if it's 0
-                             start <- as.count(my_transpose(counts))
-                             start <- start[order(names(start))] # this order thing is to keep indices consistent
-                             trajectory <- matrix(0, ncol=length (start), nrow = no_of_dil+1)
-                             rownames(trajectory) <- 0:no_of_dil
-                             colnames(trajectory) <- names(start)
-                             trajectory["0",]=start
-                           } else {
-                             trajectory <- simulate_timeseries(counts,
-                                                               dilution = dilution,
-                                                               no_of_dil = no_of_dil,
-                                                               fixation_at = fixation_at,
-                                                               grow_step = grow_step,
-                                                               abun_total = round(
-                                                                 total_counts *
-                                                                   perc),
-                                                               keep_all_timesteps = save_all)
-                           }
-                           
-                           print(paste("Simulation", iter, "finished for", s))
-                           
-                           return(trajectory)
-                           
-                         }, mc.cores = cores)
-  
-  # save data # TODO
+                             FUN = function(iter) {
+                               
+                               # 1) simulation
+                               
+                               if (abun_total == 0) { # we can't simulate anything if it's 0
+                                 start <- as.count(my_transpose(counts))
+                                 start <- start[order(names(start))] # this order thing is to keep indices consistent
+                                 trajectory <- matrix(0, ncol=length (start), nrow = no_of_dil+1)
+                                 rownames(trajectory) <- 0:no_of_dil
+                                 colnames(trajectory) <- names(start)
+                                 trajectory["0",]=start
+                               } else {
+                                 trajectory <- simulate_timeseries(counts,
+                                                                   dilution = dilution,
+                                                                   no_of_dil = no_of_dil,
+                                                                   fixation_at = fixation_at,
+                                                                   grow_step = grow_step,
+                                                                   abun_total = round(
+                                                                     total_counts *
+                                                                       perc),
+                                                                   keep_all_timesteps = save_all)
+                               }
+                               
+                               print(paste("Simulation", iter, "finished for", s))
+                               
+                               return(trajectory)
+                               
+                             }, mc.cores = cores)
+
+  # save data
   message(paste0("Saving data for sample ", s, "..."))
   if (save_all == T) {
     for (timepoint in 1:(no_of_dil + 1)) {
@@ -249,10 +239,6 @@ if (sum(counts) == 0) {
       write.csv(temp,
                 file = paste0(outdir, "/simul_", outputname, "_t_", timepoint - 1, ".csv"))
     }
-    final_abund <- temp
-    write.csv(final_abund,
-              file = paste0(outdir, "/simul_", outputname, ".csv"))
-    
   } else {
     final_abund <- as.data.frame(bind_rows(abund_temp))
     write.csv(final_abund,
