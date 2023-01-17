@@ -14,16 +14,16 @@ export ABUNTABLE=tomate_bc_result/Tree/0.99/table.from_biom_0.99.txt  # all rhiz
 ### PCGTABLE: table with information with each PCG, output from BacterialCore.py
 export PCGTABLE=tomate_bc_result/Tree/results.txt  # all rhizosphere samples, cutoff is 0 (69 nodes)
 ### SAMPLENAMES: list/subset of the samples (column headers of $ABUNTABLE) we want to run simulations for
-SAMPLENAMES="eB1 eF7 eE1 eG3 eA1 eH3 eC2"
+export SAMPLENAMES="eB1 eF7 eE1 eG3 eA1 eH3 eC2"
 
 ## Simulation parameters
-OUTPUTPREFIX="simuls_orig_0_"
-DILUTIONFACTOR="0.8"
-NO_OF_TRANSFERS="100"
-NO_OF_SIMULATIONS="1000"
-FIXATION_THRESHOLD="1" # relative abundance an OTU needs to have to be considered "fixed"
-FIXE_PERCENTAGE="TRUE"
-CORES="16"
+export OUTPUTPREFIX="simuls_orig_0_"
+export DILUTIONFACTOR="0.8"
+export NO_OF_TRANSFERS="100"
+export NO_OF_SIMULATIONS="1000"
+export FIXATION_THRESHOLD="1" # relative abundance an OTU needs to have to be considered "fixed"
+export FIXE_PERCENTAGE="TRUE"
+export CORES="16"
 
 # --------------------------------------------------------------------------
 
