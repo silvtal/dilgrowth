@@ -22,7 +22,7 @@ export DILUTIONFACTOR="0.8"
 export NO_OF_TRANSFERS="100"
 export NO_OF_SIMULATIONS="1000"
 export FIXATION_THRESHOLD="1" # relative abundance an OTU needs to have to be considered "fixed"
-export FIXE_PERCENTAGE="TRUE"
+export FIX_PERCENTAGE="TRUE"
 export CORES="16"
 
 # --------------------------------------------------------------------------
@@ -68,7 +68,7 @@ do
   /home/silviatm/R-4.0.5/bin/Rscript $workdir/v3.R \
   -a $workdir/'$ABUNTABLE' -s '$sa' \
   --dilution '$DILUTIONFACTOR' --no_of_dil '$NO_OF_TRANSFERS' --no_of_simulations '$NO_OF_SIMULATIONS' --subset "'$Leaves'" \
-  --fixation_at '$FIXATION_THRESHOLD' --fix_percentage TRUE --perc '$Average' \
+  --fixation_at '$FIXATION_THRESHOLD' --fix_percentage '$FIX_PERCENTAGE' --perc '$Average' \
   --outputname '$Core'_X'$sa' --outdir $workdir/'$OUTPUTPREFIX''$sa' --cores 16
   
   ## copy MY OUTPUT DIR from the temporary directory on the compute-node

@@ -1,0 +1,265 @@
+start_time <- Sys.time()
+## =============================================================================
+##                              ÚLTIMA VERSIÓN
+## =============================================================================
+## En la versión anterior (v3), había un wrapper cuyo input era un fichero con
+## información de cada PCG (sus hojas y sus abundancias relativas finales), y
+## este script era ejecutado por separado para cada PCG.
+##
+## En esta nueva versión, las simulaciones ocurren de forma paralela para todos
+## los PCGs. Ese fichero va a ser pues el input directo de este script. Durante
+## las simulaciones, en cada iteración, se va a tener en cuenta el crecimiento
+## proporcional que debe tener cada organismo y también 
+##
+## minor changes: tax/pcgc variables were unneccessary and removed; abuntable
+## is now formated with character colnames + no taxonomy column.
+## 
+## =============================================================================
+##                                SIMULACIÓN
+## =============================================================================
+## El UNTB consiste en una serie de comunidades locales neutrales que reciben
+## inmigración de una metacomunidad también neutral. El modelo original
+## sustituye, en cada generación/timestep, DE MEDIA una vez a cada organismo.
+## Esto significa que en cada timestep habrá N iteraciones, siendo N el número
+## total de bichos, en las que se escogerá al azar un individuo que morirá y
+## será sustituido por un nuevo individuo de una especie ya presente (división
+## celular) o bien de una no presente en la comunidad local pero sí en la
+## metacomunidad (inmigración).
+## 
+## En mi modelo hay un par de cambios: en primer lugar se trata de comunidades
+## aisladas, no hay metacomunidad ni inmigración (son aisladas porque estoy
+## replicando experimentos de laboratorio); en segundo lugar, cada vez que se
+## alcanza cierta abundancia total hago una dilución, simulando los transfers
+## del experimento del wet-lab. Esto quiere decir que no hago N iteraciones o
+## sustituciones, sino tantas como haga falta para alcanzar la misma abundancia
+## total que había antes de la dilución. Hay 12 transfers, contando el inóculo
+## inicial.
+## 
+## Las abundancias relativas en cada timestep se guardan en una matriz y
+## posteriormente se hace la media para cada OTU en cada momento y se calculan
+## la richness, evenness y diversidad, medidas de las cuales también se calcula
+## una media.
+## 
+## =============================================================================
+## disclaimer
+## =============================================================================
+## Hacemos unas asunciones que hay que entender bien:
+##
+##   1) Asumimos que tras cada transfer se ha alcanzado ya la proporción final
+##   conocida de cada PCG. Obviamente en la vida real no tiene por qué ser así,
+##   por ejemplo: que tras 7 transfers haya 75% de Enterobacteriaceae y 25% de 
+##   Pseudomonadaceae pero que tras la 3ª haya todavía 55% y 45%.
+##   [En Talavera et al. 2022 se tuvo en cuenta simulando a partir de una
+##   comunidad inicial ya estable]
+##
+##   2) Los bichos de cada PCG crecen a la par, al mismo ritmo (pero proporcio-
+##   nalmente). Esto quiere decir que no se va a dar el caso en el que (dentro
+##   de uno de los ciclos de crecimiento) primero crezca PCG1 y luego PCG2. Sin
+##   embargo, puede que en la vida real pase justo eso: que crezca primero el
+##   más abundante y luego el otro, consumiendo sus productos de desecho, sea el
+##   que crece. Asumimos que este orden no tiene mucho impacto, ni siquiera al
+##   introducir las interacciones durante el sampleo, porque las proporciones
+##   son fijas.
+##    
+##   3) Asumimos que la abundancia total de cada PCGs es la misma para todas las
+##   simulaciones, sin ruido
+## =============================================================================
+
+# ===========
+# mis datos [glc]
+# ===========
+library("untb") # simulate_timeseries uses "as.count"
+library("tidyverse")
+#source("/home/silviatm/micro/varios/2021_06_28__null_models/null_model_v3/my_functions.R")
+#source("/home/silvia/Apps/my_functions.R")
+source("./my_functions.R")
+library("gsubfn") # for unpacking values
+library("Rcpp")
+#source("/home/silviatm/micro/varios/2021_06_28__null_models/null_model_v3/functions_for_neutral_modelling.R")
+#source("/home/silvia/Apps/functions_for_neutral_modelling.R")
+source("./functions_for_neutral_modelling.R")
+library("parallel")
+library("optparse") 
+library("dplyr") # para bind_rows tras paralelización
+
+option_list <- list(
+  # input params
+  make_option(c("-a", "--abuntable"), type = "character",
+              default = NULL,
+              help = "Abundance table"),
+  make_option(c("-a", "--pcgtable"), type = "character",
+              default = NULL,
+              help = "PCG table; table with information with each PCG, output from BacterialCore.py; required fields: Core (PCG name), Average (relative abundance), Leaves."),
+  make_option(c("-s", "--sample"), type = "character",
+              default = NULL,
+              help = "Sample name in the abundance table"),
+  make_option(c("--dilution"), type = "character",
+              default = "8 * 10 ** (-3)",
+              help = "Dilution before each simulated transfer. Can be an equation (e.g. 10**(-3))"),
+  make_option(c("--no_of_dil"), type = "integer",
+              default = 12,
+              help = "Number of dilutions/transfers"),
+  make_option(c("--fixation_at"), type = "double",
+              default = 1,
+              help = "The simulations stop when only one bug is fixed at 100% [fixation_at=1], since it's meaningless to keep going when only one species is left. Nevertheless, we can consider an OTU is fixed when it has reached a lower relative abundance (e.g. fixation_at=0.95) and stop earlier."),
+  make_option(c("--save_all"), type = "logical",
+              default = FALSE,
+              help = "save all intermediate states of the simulations? default FALSE"),
+  make_option(c("--grow_step"), type = "integer",
+              default = 1,
+              help = "How many bugs are born on each iteration. 1 by default"),
+  make_option(c("--cores"), type = "integer",
+              default = 1,
+              help = "Number of cores to use in parallelization processes (mclapply). Default: 4.",
+              metavar = "integer"),
+  # output params
+  make_option(c("--no_of_simulations"), type = "integer",
+              default = 1,
+              help = "Number of simulations"),
+  make_option(c("--outputname"), type = "character",
+              default = "out",
+              help = "name for output .csv file"),
+  make_option(c("--outdir"), type = "character",
+              default = "results",
+              help = "output directory")
+)
+
+parser <- OptionParser(option_list = option_list)
+opt <- parse_args(parser)
+
+abuntable  <- opt$abuntable  # e.g. "./original_100percArbol/Tree/0.99/table.from_biom_0.99.txt"
+pcgtable <- opt$pcgtable
+s <- opt$sample      # e.g. "X2", col name from map
+
+outdir <- opt$outdir # e.g. "my_neutral_model_v2_test_16_simuls_8_cores"
+outputname <- opt$outputname # e.g. "X2_rep4"
+cores <- opt$cores  # e.g. 16
+
+save_all  <- opt$save_all
+grow_step <- opt$grow_step
+
+dilution <-  eval(parse(text=opt$dilution)) # e.g. 8 * 10 ** (-3)
+no_of_dil <- opt$no_of_dil
+fixation_at <- opt$fixation_at
+
+no_of_simulations <- opt$no_of_simulations
+
+# read abundance table
+exp <- read.csv(
+  abuntable,
+  sep = "\t",
+  skip = 1,
+  row.names = 1,
+  check.names = FALSE
+)
+species_are_rows <- TRUE; if (!species_are_rows) {exp <- my_transpose(exp)}
+exp <- exp[colnames(exp) != "taxonomy"] # remove taxonomy column if present
+colnames(exp) <- as.character(colnames(exp)) # in case sample names are numbers
+
+# read PCG table
+pcg_table <- read.csv(pcgtable, sep="\t")
+pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
+pcg_table <- my_transpose(pcg_table[c("Core", "Average", "Leaves")])
+# TODO
+(dont forget others)
+subset
+percentage
+
+
+# create output dir
+system(paste("mkdir -p", outdir))
+
+# =============
+# create counts
+# =============
+# Solo necesito la "muestra original", para ejecutar el simulate_timeseries
+if (is.null(subset_otus)) {
+  counts <- exp[s]
+} else {
+  subset_otus <- strsplit(subset_otus, ";")[[1]]
+  counts <- exp[subset_otus, s, drop=F]
+}
+
+
+# ==========
+# simulation
+# ==========
+
+## start
+
+## results will be stored here:
+final_abund <- list()
+
+
+# relative expected abundances of each PCG.
+if (fix_percentage) {
+  perc <- fixed_percentage
+} else {
+  # picked percentages from random real replicate
+  perc <- sample_n(percentage_map[percentage_map$ORIG==s, ], 1)
+}
+
+# initial total abundance
+total_counts <- sum(exp[s]) 
+# final total abundance
+abun_total   <- round(total_counts * perc)
+
+# check first if there's anything to simulate
+if (total_counts == 0) {
+  message(paste0("There are no detectable OTUs in initial sample ",
+                 s, ". Moving to next PCG..."))
+} else if (total_counts * dilution < 3) {
+  stop("EXIT: 3 or less bugs will be left after diluting! Consider changing your dilution factor.")
+  
+# start simulations if everything's OK
+} else {
+  abund_temp <- mclapply(X = 1:no_of_simulations,
+                             FUN = function(iter) {
+                               
+                               # 1) simulation
+                               
+                               if (abun_total == 0) { # we can't simulate anything if it's 0
+                                 start <- as.count(my_transpose(counts))
+                                 start <- start[order(names(start))] # this order thing is to keep indices consistent
+                                 trajectory <- matrix(0, ncol=length (start), nrow = no_of_dil+1)
+                                 rownames(trajectory) <- 0:no_of_dil
+                                 colnames(trajectory) <- names(start)
+                                 trajectory["0",]=start
+                               } else {
+                                 trajectory <- simulate_timeseries(counts,
+                                                                   dilution = dilution,
+                                                                   no_of_dil = no_of_dil,
+                                                                   fixation_at = fixation_at,
+                                                                   grow_step = grow_step,
+                                                                   abun_total = total_counts,
+                                                                   keep_all_timesteps = save_all)
+                               }
+                               
+                               print(paste("Simulation", iter, "finished for", s))
+                               
+                               return(trajectory)
+                               
+                             }, mc.cores = cores)
+
+  # save data
+  message(paste0("Saving data for sample ", s, "..."))
+  if (save_all == T) {
+    for (timepoint in 1:(no_of_dil + 1)) {
+      # pick all rows number "timepoint" from all the lists in all_abund
+      # "temp" refers to a single timepoint
+      temp <- lapply(abund_temp, FUN = function(traj) {
+        return(traj[timepoint, , drop = F] %>% as.data.frame)}) %>%
+        bind_rows %>% as_tibble # one file per timepoint
+      
+      write.csv(temp,
+                file = paste0(outdir, "/simul_", outputname, "_t_", timepoint - 1, ".csv"))
+    }
+  } else {
+    final_abund <- as.data.frame(bind_rows(abund_temp))
+    write.csv(final_abund,
+              file = paste0(outdir,"/simul_", outputname, ".csv"))
+  }
+}
+
+end_time <- Sys.time()
+print(end_time - start_time)

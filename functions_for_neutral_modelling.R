@@ -1,5 +1,3 @@
-sourceCpp("./growth.cpp")
-
 create_counts <- function (exp, # abundances
                            map, # metadata about m_inic, replicates, sample names...
                            m_inic, # original sample names
@@ -62,18 +60,34 @@ simulate_timeseries <- function (counts_data,
                                  no_of_dil=12,
                                  fixation_at=1,
                                  abun_total=NULL,
+                                 relative_abunds=NULL,
                                  grow_step=1,
                                  keep_all_timesteps=FALSE,
                                  force_continue=FALSE) { 
   
-  start <- as.count(my_transpose(counts_data))
+  # counts_data puede ser un string o un dataframe de una columna como en el wrapper de /simuls
+  if (is.atomic(counts_data)) {
+    start <- counts_data
+    if (!is.null(names(start))) {
+      names(start) <- paste0("sp", 1:length(start))
+    }
+  } else {
+    start <- as.count(my_transpose(counts_data))
+  }
   start <- start[order(names(start))] # this order thing is to keep indices consistent
   
   # Preparo la matriz que iré rellenando
   len <- length (start)    # número de especies
-  if (is.null(abun_total)){ # establish default value.
-    abun_total <- sum(start) # número de individuos al que dejaremos crecer antes de volver a diluir cada vez
+  
+  if (is.null(abun_total)) { # establish default value.
+    abun_total <- sum (start) # número de individuos al que dejaremos crecer antes de volver a diluir cada vez
   }
+  if (is.null(relative_abunds)){ # desired relative final abundance for each species
+    relative_abunds <- rep(1, len)
+  }
+  
+  # TODO
+  # define abun por each pcg
   
   # if keep_all_timesteps, initialize data.frame with starting abundances
   if (keep_all_timesteps){
