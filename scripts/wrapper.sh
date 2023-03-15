@@ -17,6 +17,8 @@ export PCGTABLE=tomate_bc_result/Tree/results.txt  # all rhizosphere samples, cu
 export SAMPLENAMES="eB1 eF7 eE1 eG3 eA1 eH3 eC2"
 
 ## Simulation parameters
+export SCRIPT="v3.R" ## main simulation script; full path or relative to $workdir/$SUBMITDIR
+export R="" ## Rscript's location, can be empty, must add the final "/"
 export OUTPUTPREFIX="simuls_orig_0_"
 export DILUTIONFACTOR="0.8"
 export NO_OF_TRANSFERS="100"
@@ -65,7 +67,7 @@ do
   cd $workdir
 
   ## run simuls
-  /home/silviatm/R-4.0.5/bin/Rscript $workdir/v3.R \
+  '$R'Rscript '$SCRIPT' \
   -a $workdir/'$ABUNTABLE' -s '$sa' \
   --dilution '$DILUTIONFACTOR' --no_of_dil '$NO_OF_TRANSFERS' --no_of_simulations '$NO_OF_SIMULATIONS' --subset "'$Leaves'" \
   --fixation_at '$FIXATION_THRESHOLD' --fix_percentage '$FIX_PERCENTAGE' --perc '$Average' \
