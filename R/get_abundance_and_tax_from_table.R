@@ -22,7 +22,7 @@ get_abundance_and_tax_from_table <- function (exp_file,
                                               species_are_rows=TRUE,
                                               sep="\t",
                                               row.names=1,
-                                              skip=1,
+                                              skip=0,
                                               taxa_fields=NULL,
                                               tax_col_name="taxonomy",
                                               tax_sep=";",
@@ -31,8 +31,7 @@ get_abundance_and_tax_from_table <- function (exp_file,
   if (is.null(taxa_fields)) {taxa_fields = c("Kingdom","Phylum","Class","Order","Family","Genus","Species")}
 
   exp <-
-    read.csv(
-      exp_file,
+    read.csv(exp_file,
       sep = sep,
       skip = skip,
       row.names = row.names,
@@ -43,10 +42,14 @@ get_abundance_and_tax_from_table <- function (exp_file,
     exp <- .my_transpose(exp)
   }
 
-  tax <- exp["taxonomy"]
-  exp <- exp[1:dim(exp)[2] - 1]
-  tax <- tax %>% separate("taxonomy", sep = tax_sep, taxa_fields)
-  tax[is.na(tax)] <- NA_option # avoid na-related errors
+  if (tax_col_name %in% colnames(exp)) {
+    tax <- exp[tax_col_name]
+    exp <- exp[1:dim(exp)[2] - 1]
+    tax <- tax %>% separate(tax_col_name, sep = tax_sep, taxa_fields)
+    tax[is.na(tax)] <- NA_option # avoid na-related errors
+  } else {
+    tax <- NULL
+  }
 
   return(list(exp, tax))
 }

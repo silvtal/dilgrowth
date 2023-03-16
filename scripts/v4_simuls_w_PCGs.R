@@ -80,9 +80,12 @@ option_list <- list(
   make_option(c("-a", "--abuntable"), type = "character",
               default = NULL,
               help = "Abundance table"),
-  make_option(c("-a", "--pcgtable"), type = "character",
+  make_option(c("-p", "--pcgtable"), type = "character",
               default = NULL,
               help = "PCG table; table with information with each PCG, output from BacterialCore.py; required fields: Core (PCG name), Average (relative abundance), Leaves."),
+  make_option(c("--skip_lines_abuntable"), type = "integer",
+              default = 0,
+              help = "How many lines of abuntable should we skip (read.csv()'s 'skip'). Should be 1 for Qiime 1 output, for instance"),
   make_option(c("-s", "--sample"), type = "character",
               default = NULL,
               help = "Sample name in the abundance table"),
@@ -121,6 +124,7 @@ parser <- OptionParser(option_list = option_list)
 opt <- parse_args(parser)
 
 abuntable  <- opt$abuntable  # e.g. "./original_100percArbol/Tree/0.99/table.from_biom_0.99.txt"
+skip_lines_abuntable <- opt$skip_lines_abuntable
 pcgtable <- opt$pcgtable
 s <- opt$sample      # e.g. "X2", col name from map
 
@@ -141,7 +145,7 @@ no_of_simulations <- opt$no_of_simulations
 exp <- read.csv(
   abuntable,
   sep = "\t",
-  skip = 1,
+  skip = skip_lines_abuntable,
   row.names = 1,
   check.names = FALSE
 )
@@ -153,10 +157,11 @@ colnames(exp) <- as.character(colnames(exp)) # in case sample names are numbers
 pcg_table <- read.csv(pcgtable, sep="\t")
 pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
 pcg_table <- my_transpose(pcg_table[c("Core", "Average", "Leaves")])
+
 # TODO
-(dont forget others)
-subset
-percentage
+# (dont forget others)
+# subset
+# percentage
 
 
 # create output dir

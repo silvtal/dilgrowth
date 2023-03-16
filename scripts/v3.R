@@ -63,6 +63,9 @@ option_list <- list(
   make_option(c("-a", "--abuntable"), type = "character",
               default = NULL,
               help = "Abundance table"),
+  make_option(c("--skip_lines_abuntable"), type = "integer",
+              default = 0,
+              help = "How many lines of abuntable should we skip (read.csv()'s 'skip'). Should be 1 for Qiime 1 output, for instance"),
   make_option(c("-s", "--sample"), type = "character",
               default = NULL,
               help = "Sample name in the abundance table"),
@@ -114,6 +117,7 @@ parser <- OptionParser(option_list = option_list)
 opt <- parse_args(parser)
 
 abuntable  <- opt$abuntable  # e.g. "./original_100percArbol/Tree/0.99/table.from_biom_0.99.txt"
+skip_lines_abuntable <- opt$skip_lines_abuntable
 s <- opt$sample      # e.g. "X2", col name from map
 subset_otus <- opt$subset
 
@@ -139,7 +143,8 @@ if (fix_percentage){
 }
 
 # leo matriz abundancias
-list[exp, tax] <- get_abundance_and_tax_from_table(abuntable)
+list[exp, tax] <- get_abundance_and_tax_from_table(abuntable,
+                                                   skip=skip_lines_abuntable)
 # creo output dir
 system(paste("mkdir -p", outdir))
 
@@ -158,13 +163,8 @@ if (is.null(subset_otus)) {
 # ==========
 # simulation
 # ==========
-pcgc <- .pcgcodemaker(tax, f_ = T)
-
-## start
-
 ## results will be stored here:
 final_abund <- list()
-
 
 # relative expected abundances of each PCG.
 if (fix_percentage) {
