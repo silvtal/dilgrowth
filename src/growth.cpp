@@ -103,11 +103,6 @@ NumericVector growth_log(NumericVector x,
   NumericVector prob = x/sum((x));
   CharacterVector names  = carrying_capacities.attr("names");
   CharacterVector groups = unique(names);
-  Rcout << x << "\n\n"; // DEBUG
-  Rcout << "prob" << prob << "\n\n"; // DEBUG
-  Rcout << "cc" << carrying_capacities << "\n\n"; // DEBUG
-  Rcout << names << "\n\n"; // DEBUG
-  Rcout << groups << "\n\n"; // DEBUG
 
   // Get new abundance for each bug, group by group.
   // This is were we apply the probabilities: within each group, each species
@@ -119,8 +114,6 @@ NumericVector growth_log(NumericVector x,
     for (int i = 0; i < n; i++) {
       g[i] = (names[i] == group);
     }
-    Rcout << "this is one group "; // DEBUG
-    Rcout << g; // DEBUG
     // sum_group => total abundance of the group
     double sum_group = 0.0;
     for (int i = 0; i < size; i++) {
@@ -128,23 +121,14 @@ NumericVector growth_log(NumericVector x,
         sum_group += x[i];
       }
     }
-    Rcout << "this is the sum of this group "; // DEBUG
-    Rcout << sum_group << "\n\n"; // DEBUG
     // Here, we randomly determine whether each species in the group will grow
     for (int i = 0; i < size; i++) {
       if (g[i]) {
-        Rcout << i << " is in this group\n\n"; // DEBUG
-        Rcout << "its value is " << x[i] << "\n\n"; // DEBUG
         if (rbinom(1, 1, x[i])) { // more likely to grow or die if more abundant <- nothing if 0
           newx[i] = x[i] + (1 - sum_group / carrying_capacities[i]);
-          Rcout << x[i] << " is now" << newx[i] << "\n\n"; // DEBUG
         }
       }
     }
   }
-  Rcout << "this is the new vector"; // DEBUG
-  Rcout << newx; // DEBUG
-  Rcout << "\n\nthis is the OLD vector"; // DEBUG
-  Rcout << x; // DEBUG
   return newx;
 }

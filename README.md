@@ -4,6 +4,10 @@
 
 This package includes command line scripts and standalone R/c++ functions for simulating growth-dilution experiments. The main script takes abundance data and simulates growth by randomly picking one or more species to grow in each iteration. When the desired total abundance is reached for the community, dilution happens by random sampling.
 
+Following the [phylogenetic core group](https://doi.org/10.1186/s40168-021-01023-y) theoretical framework, growth can be simulated by taking into account functional groups (PCGs/ECGs). In this case, growth is logistic with a different carrying capacity for each group.
+
+If there are no groups, drift is simulated by sampling. Most abundant species are more likely to be randomly picked and grow. If there are groups, drift is simulated for each species in each iteration with a binomial function that will determine if it will grow or not.
+
 ## License
 
 MIT LICENSE
@@ -12,13 +16,12 @@ MIT LICENSE
 Rcpp, RcppArmadillo, data.table, gsubfn, magrittr, tidyr, untb, utils, stats
 
 ## Scripts
+- `dilgrowth.R`: This script runs dilution-growth simulations in parallel for all functional groups specified in a file with information of each PCG (its leaves and final relative abundances, BacterialCore.py output). It also needs an abundance table from which a single column (sample) will be chosen as initial abudance data for the simulation. In each iteration of the growth simulations, growth of each bug will be logistic and depend on the carrying-capacity of its functional growth. This growth is also stochastic and simulates intra-group drift.
 
-- wrapper.sh : lanza la ejecución de v3.R para diferentes muestras. Puede ser útil para paralelizar en un cluster. Necesita results.txt (PCG table) + table.from.biom (abundance table). Paraleliza para una lista de muestras iniciales. Se genera para cada muestra inicial una carpeta con simuls de cada PCG por separado. Cada PCG alcanza la abundancia relativa especificada en la PCG table.
+- `dilgrowth_old_1g.R`: This old version simulates non-logistic, lineal growth for each functional group separately, creating separate files. It needs the initial abundances from one sample (a matrix column from an abundance table) and an index or list of OTUs (corresponding to a group; `results.txt` file from [BacterialCore.py](https://github.com/silvtal/BacterialCore)). Also simulates the changes in relative abundances over a series of dilution-transfer cycles.
 
-- v3.R : dada una muestra inicial y un índice/lista de OTUs (=correspondiente a un PCG), simula el cambio de sus abundancias relativas a lo largo de una serie de transfers con dilución
+- `wrapper.sh`: Just a wrapper we use in our cluster. It launches `dilgrowth_old_1g.R` for different samples of an abundance table. Needs the `results.txt` PCG table + a `table.from.biom`-like abundance table. For each initial sample, a folder is generated that contains simulations _for each PCG separately_. Each PCG will reach the relative abundance that was specified on the PCG table.
 
-- v4.R : En la versión anterior (v3), había un wrapper cuyo input era un fichero con información de cada PCG (sus hojas y sus abundancias relativas finales), y este script era ejecutado por separado para cada PCG. En esta nueva versión, las simulaciones ocurren de forma paralela para todos los PCGs. Ese fichero va a ser pues el input directo de este script. Durante las simulaciones, en cada iteración, se va a tener en cuenta el crecimiento proporcional que debe tener cada organismo. _minor changes: tax/pcgc variables were unneccessary and removed; abuntable
-is now formated with character colnames + no taxonomy column_.
 
 ## Others
 
