@@ -11,7 +11,6 @@
 #' @param abun_total Total abundance for the community to grow in each dilution-growth
 #' cycle. When this value is reached, the cycle ends and another dilution (if needed)
 #' happens. If NULL, \code{abun_total} is set to the initial total abundance
-#' @param relative_abunds
 #' @param grow_step Number of individuals that grow each timestep (Default: 1)
 #' @param keep_all_timesteps
 #' @param force_continue
@@ -21,15 +20,14 @@
 #' @return
 #' @export
 simulate_timeseries <- function (counts_data,
+                                 carrying_capacities=NULL,
                                  dilution=8*10**(-3), # format: 0.1 instead of 10(%)
                                  no_of_dil=12,
                                  fixation_at=1,
                                  abun_total=NULL,
-                                 relative_abunds=NULL,
                                  grow_step=1,
                                  keep_all_timesteps=FALSE,
                                  force_continue=FALSE) {
-
   # counts_data puede ser un string o un dataframe de una columna como en el wrapper de /simuls
   if (is.atomic(counts_data)) {
     start <- counts_data
@@ -47,12 +45,6 @@ simulate_timeseries <- function (counts_data,
   if (is.null(abun_total)) { # establish default value.
     abun_total <- sum (start) # número de individuos al que dejaremos crecer antes de volver a diluir cada vez
   }
-  if (is.null(relative_abunds)){ # desired relative final abundance for each species
-    relative_abunds <- rep(1, len)
-  }
-
-  # TODO
-  # define abun por each pcg
 
   # if keep_all_timesteps, initialize data.frame with starting abundances
   if (keep_all_timesteps){
@@ -99,17 +91,29 @@ simulate_timeseries <- function (counts_data,
         replace = TRUE,
         prob = this_timestep))])
 
-      temp <- empty                                                                #0
-      temp[names(this_timestep)] <- this_timestep                                  #0 # aquí se desordena, pero solo hasta la siguiente línea.
-      this_timestep <- temp[order(names(temp))]                                    #0
+      # We do this trick to keep all species "entries", even if they're 0 after
+      # diluting. It's important for being able to put all timesteps together
+      # intro a trajectory variable/file (keep_all_timesteps==TRUE) and for
+      # saving multiple simulations together into a table
+      temp <- empty
+      temp[names(this_timestep)] <- this_timestep
+      this_timestep <- temp[order(names(temp))]
     }
 
     # (1) hago que los bichos se dupliquen al azar mediante sampling hasta
-    # llegar a la cantidad inicial (while loop); (2) run the substitution
+    # llegar a la cantidad inicial (while loop)
     ns <- names(this_timestep)
-    this_timestep <- as.vector(this_timestep)
-    while (sum(this_timestep) < abun_total) {
-      this_timestep <- growth(this_timestep, abun_total, grow_step)                # Rcpp function
+    if (is.null(carrying_capacities)) {
+      while (sum(this_timestep) < abun_total) {
+        this_timestep <- growth(this_timestep,
+                                abun_total,
+                                grow_step)
+      }
+    } else {
+        while (round(sum(this_timestep))+1 < abun_total) { # "round" to avoid infinitesimally small differences
+         this_timestep <- growth_log(x = this_timestep,
+                                     carrying_capacities = carrying_capacities)
+        }
     }
     names(this_timestep) <- ns
     dil <- dil + 1

@@ -10,7 +10,7 @@ get_abundance_and_tax_from_table(
   species_are_rows = TRUE,
   sep = "\\t",
   row.names = 1,
-  skip = 1,
+  skip = 0,
   taxa_fields = NULL,
   tax_col_name = "taxonomy",
   tax_sep = ";",

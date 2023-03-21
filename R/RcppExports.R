@@ -7,8 +7,8 @@ pick_new_bugs <- function(x, size, replace, prob) {
 }
 
 #' @export
-growth <- function(this_timestep, abun_total, grow_step) {
-    .Call(`_dilgrowth_growth`, this_timestep, abun_total, grow_step)
+growth <- function(this_timestep, abun_total, grow_step, interactions = NULL) {
+    .Call(`_dilgrowth_growth`, this_timestep, abun_total, grow_step, interactions)
 }
 
 #' @export
@@ -16,8 +16,21 @@ full_growth <- function(this_timestep, abun_total, grow_step) {
     .Call(`_dilgrowth_full_growth`, this_timestep, abun_total, grow_step)
 }
 
+#' This function simulates growth in a community by looking at the carrying
+#' capacities of each species, which they have in common with other species in
+#' their group. It takes a named vector, carrying_capacities.
+#'
+#' Growth is RANDOM but logistic: all species have the opportunity to grow each
+#' time this function is called, but whether they will is random and depends on
+#' their abundance (random), but they grow at different rates depending not
+#' only on which group they belong to but also to how close they are to their
+#' carrying capacity  (logistic)
+#'
+#' If the carrying capacity for a group was surpassed already, the species of
+#' that group will die at a proportionate rate, while the others may grow.
+#'
 #' @export
-growth_with_interactions <- function(this_timestep, abun_total, grow_step, interactions) {
-    .Call(`_dilgrowth_growth_with_interactions`, this_timestep, abun_total, grow_step, interactions)
+growth_log <- function(x, carrying_capacities) {
+    .Call(`_dilgrowth_growth_log`, x, carrying_capacities)
 }
 

@@ -89,6 +89,9 @@ option_list <- list(
   make_option(c("-s", "--sample"), type = "character",
               default = NULL,
               help = "Sample name in the abundance table"),
+  make_option(c("--selected_species"), type = "character",
+              default = NULL,
+              help = "semicolon-separated list of species to select from the abundance table"),
   make_option(c("--dilution"), type = "character",
               default = "8 * 10 ** (-3)",
               help = "Dilution before each simulated transfer. Can be an equation (e.g. 10**(-3))"),
@@ -108,10 +111,10 @@ option_list <- list(
               default = 1,
               help = "Number of cores to use in parallelization processes (mclapply). Default: 4.",
               metavar = "integer"),
-  # output params
   make_option(c("--no_of_simulations"), type = "integer",
               default = 1,
               help = "Number of simulations"),
+  # output params
   make_option(c("--outputname"), type = "character",
               default = "out",
               help = "name for output .csv file"),
@@ -126,7 +129,8 @@ opt <- parse_args(parser)
 abuntable  <- opt$abuntable  # e.g. "./original_100percArbol/Tree/0.99/table.from_biom_0.99.txt"
 skip_lines_abuntable <- opt$skip_lines_abuntable
 pcgtable <- opt$pcgtable
-s <- opt$sample      # e.g. "X2", col name from map
+s <- opt$sample      # e.g. "X2", "sa2"...
+selected_species <- opt$selected_species
 
 outdir <- opt$outdir # e.g. "my_neutral_model_v2_test_16_simuls_8_cores"
 outputname <- opt$outputname # e.g. "X2_rep4"
@@ -149,20 +153,15 @@ exp <- read.csv(
   row.names = 1,
   check.names = FALSE
 )
-species_are_rows <- TRUE; if (!species_are_rows) {exp <- my_transpose(exp)}
+species_are_rows <- TRUE; if (!species_are_rows) {exp <- .my_transpose(exp)}
 exp <- exp[colnames(exp) != "taxonomy"] # remove taxonomy column if present
 colnames(exp) <- as.character(colnames(exp)) # in case sample names are numbers
 
 # read PCG table
 pcg_table <- read.csv(pcgtable, sep="\t")
 pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
-pcg_table <- my_transpose(pcg_table[c("Core", "Average", "Leaves")])
-
-# TODO
-# (dont forget others)
-# subset
-# percentage
-
+pcg_table <- pcg_table[c("Core", "Average", "Leaves")]
+pcg_table$Average <- as.numeric(pcg_table$Average)
 
 # create output dir
 system(paste("mkdir -p", outdir))
@@ -170,74 +169,55 @@ system(paste("mkdir -p", outdir))
 # =============
 # create counts
 # =============
-# Solo necesito la "muestra original", para ejecutar el simulate_timeseries
-if (is.null(subset_otus)) {
+# s is the original sample, an abundance vector
+# selected_species is a vector of species from that vector
+if (is.null(selected_species)) {
   counts <- exp[s]
 } else {
-  subset_otus <- strsplit(subset_otus, ";")[[1]]
-  counts <- exp[subset_otus, s, drop=F]
+  selected_species <- strsplit(selected_species, ";")[[1]]
+  counts <- exp[selected_species, s, drop=F]
 }
-
 
 # ==========
 # simulation
 # ==========
-
-## start
-
 ## results will be stored here:
 final_abund <- list()
 
-
-# relative expected abundances of each PCG.
-if (fix_percentage) {
-  perc <- fixed_percentage
-} else {
-  # picked percentages from random real replicate
-  perc <- sample_n(percentage_map[percentage_map$ORIG==s, ], 1)
-}
-
-# initial total abundance
-total_counts <- sum(exp[s])
-# final total abundance
-abun_total   <- round(total_counts * perc)
+# initial/final total abundance
+abun_total <- sum(counts)
 
 # check first if there's anything to simulate
-if (total_counts == 0) {
+if (abun_total == 0) {
   message(paste0("There are no detectable OTUs in initial sample ",
                  s, ". Moving to next PCG..."))
-} else if (total_counts * dilution < 3) {
+} else if (abun_total * dilution < 3) {
   stop("EXIT: 3 or less bugs will be left after diluting! Consider changing your dilution factor.")
 
-# start simulations if everything's OK
 } else {
+  # parse PCG table if everything's OK
+  abun_others <- abun_total * (1 - sum(pcg_table$Average))
+  carrying_capacities <- rep(round(abun_others), nrow(counts))
+  names(carrying_capacities) <- rep("others", nrow(counts))
+  for (group in 1:nrow(pcg_table)) {
+    leaves <- strsplit(pcg_table$Leaves[group], ";")[[1]]
+    names(carrying_capacities)[rownames(counts) %in% leaves] <- pcg_table$Core[group]
+    carrying_capacities[rownames(counts) %in% leaves]        <- (pcg_table$Average[group] * abun_total) %>% round
+  }
+  # start simulations
   abund_temp <- mclapply(X = 1:no_of_simulations,
-                             FUN = function(iter) {
-
-                               # 1) simulation
-
-                               if (abun_total == 0) { # we can't simulate anything if it's 0
-                                 start <- as.count(my_transpose(counts))
-                                 start <- start[order(names(start))] # this order thing is to keep indices consistent
-                                 trajectory <- matrix(0, ncol=length (start), nrow = no_of_dil+1)
-                                 rownames(trajectory) <- 0:no_of_dil
-                                 colnames(trajectory) <- names(start)
-                                 trajectory["0",]=start
-                               } else {
-                                 trajectory <- simulate_timeseries(counts,
-                                                                   dilution = dilution,
-                                                                   no_of_dil = no_of_dil,
-                                                                   fixation_at = fixation_at,
-                                                                   grow_step = grow_step,
-                                                                   abun_total = total_counts,
-                                                                   keep_all_timesteps = save_all)
-                               }
-
-                               print(paste("Simulation", iter, "finished for", s))
-
-                               return(trajectory)
-
-                             }, mc.cores = cores)
+                         FUN = function(iter) {
+                           trajectory <- simulate_timeseries(counts,
+                                                             abun_total = abun_total,
+                                                             carrying_capacities = carrying_capacities,
+                                                             dilution = dilution,
+                                                             no_of_dil = no_of_dil,
+                                                             fixation_at = fixation_at,
+                                                             grow_step = grow_step,
+                                                             keep_all_timesteps = save_all)
+                           print(paste("Simulation", iter, "finished for", s))
+                           return(trajectory)
+                         }, mc.cores = cores)
 
   # save data
   message(paste0("Saving data for sample ", s, "..."))

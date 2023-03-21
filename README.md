@@ -6,7 +6,7 @@ This package includes command line scripts and standalone R/c++ functions for si
 
 ## License
 
-MIT + file LICENSE
+MIT LICENSE
 
 ## Dependencies
 Rcpp, RcppArmadillo, data.table, gsubfn, magrittr, tidyr, untb, utils, stats

@@ -8,11 +8,11 @@ dilution, a random organism is duplicated}
 \usage{
 simulate_timeseries(
   counts_data,
+  carrying_capacities = NULL,
   dilution = 8 * 10^(-3),
   no_of_dil = 12,
   fixation_at = 1,
   abun_total = NULL,
-  relative_abunds = NULL,
   grow_step = 1,
   keep_all_timesteps = FALSE,
   force_continue = FALSE
