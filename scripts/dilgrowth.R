@@ -158,10 +158,12 @@ exp <- exp[colnames(exp) != "taxonomy"] # remove taxonomy column if present
 colnames(exp) <- as.character(colnames(exp)) # in case sample names are numbers
 
 # read PCG table
-pcg_table <- read.csv(pcgtable, sep="\t")
-pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
-pcg_table <- pcg_table[c("Core", "Average", "Leaves")]
-pcg_table$Average <- as.numeric(pcg_table$Average)
+if (!(is.null(pcgtable))) {
+  pcg_table <- read.csv(pcgtable, sep="\t")
+  pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
+  pcg_table <- pcg_table[c("Core", "Average", "Leaves")]
+  pcg_table$Average <- as.numeric(pcg_table$Average)
+}
 
 # create output dir
 system(paste("mkdir -p", outdir))
@@ -195,15 +197,23 @@ if (abun_total == 0) {
   stop("EXIT: 3 or less bugs will be left after diluting! Consider changing your dilution factor.")
 
 } else {
-  # parse PCG table if everything's OK
-  abun_others <- abun_total * (1 - sum(pcg_table$Average))
-  carrying_capacities <- rep(round(abun_others), nrow(counts))
-  names(carrying_capacities) <- rep("others", nrow(counts))
-  for (group in 1:nrow(pcg_table)) {
-    leaves <- strsplit(pcg_table$Leaves[group], ";")[[1]]
-    names(carrying_capacities)[rownames(counts) %in% leaves] <- pcg_table$Core[group]
-    carrying_capacities[rownames(counts) %in% leaves]        <- (pcg_table$Average[group] * abun_total) %>% round
+  if (!(is.null(pcgtable))) {
+    # parse PCG table if everything's OK
+    abun_others <- abun_total * (1 - sum(pcg_table$Average))
+    carrying_capacities <- rep(round(abun_others), nrow(counts))
+    names(carrying_capacities) <- rep("others", nrow(counts))
+    for (group in 1:nrow(pcg_table)) {
+      leaves <- strsplit(pcg_table$Leaves[group], ";")[[1]]
+      names(carrying_capacities)[rownames(counts) %in% leaves] <- pcg_table$Core[group]
+      carrying_capacities[rownames(counts) %in% leaves]        <- (pcg_table$Average[group] * abun_total) %>% round
+    }
+    message(paste0("Simulating logistic growth for groups: ", paste0(unique(pcg_table$Core), collapse = ", "), "."))
+  } else {
+    carrying_capacities=NULL
+    message("No PCG table provided; simulating growth without groups")
   }
+}
+
   # start simulations
   abund_temp <- mclapply(X = 1:no_of_simulations,
                          FUN = function(iter) {

@@ -1,1 +1,2 @@
-system("sh ../test.sh")
+setwd("..")
+system("sh test.sh")

@@ -124,8 +124,12 @@ NumericVector growth_log(NumericVector x,
     // Here, we randomly determine whether each species in the group will grow
     for (int i = 0; i < size; i++) {
       if (g[i]) {
-        if (rbinom(1, 1, x[i])) { // more likely to grow or die if more abundant <- nothing if 0
-          newx[i] = x[i] + (1 - sum_group / carrying_capacities[i]);
+        if (rbinom(1, 1, prob[i])[0] == 1) { // more likely to grow or die if more abundant <- nothing if 0
+          NumericVector growth_step(1, (2 * (1 - sum_group / carrying_capacities[i])));
+          newx[i] = x[i] + max(growth_step);
+            ;
+        } else {
+          newx[i] = x[i];
         }
       }
     }
