@@ -163,7 +163,7 @@ simulate_timeseries <- function (counts_data,
           )
         }
       } else {
-        while (sum(this_timestep)+1 < abun_total) {
+        while (sum(this_timestep) < abun_total) {
           grow_step     <- check_step(this_timestep, abun_total, grow_step)
           this_timestep <- growth(
             x = this_timestep,

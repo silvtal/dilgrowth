@@ -225,8 +225,6 @@ if (abun_total == 0) {
     carrying_capacities=NULL
     message("No PCG table provided; simulating growth without groups")
   }
-}
-
   # start simulations
   abund_temp <- mclapply(X = 1:no_of_simulations,
                          FUN = function(iter) {
