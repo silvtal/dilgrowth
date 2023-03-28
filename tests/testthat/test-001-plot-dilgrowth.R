@@ -30,7 +30,7 @@ read_all_files <- function(filename, transfers) {
   return(df)
 }
 
-for (func in c('new', 'old')) {
+for (func in c('groups', 'groups_logistic', 'old')) {
   for (sample in c("sa1", "sa2")) {
     # loop through csv files and add them to the data frame
     df <- read_all_files(

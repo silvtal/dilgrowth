@@ -1,16 +1,24 @@
 # ==============================================================================
-# This test plots a growth cycle, iteration by iteration, to compare logistic
-# and non-logistic growth
+# This test creates simulation data similarly to test-000, with growth over 10
+# transfers. Also plots the results similarly to test-002-plot-growth.
+# In this case, we'll include a table of species interactions.
 # ==============================================================================
+setwd("..")
 library("dilgrowth")
 library("tidyverse")
 # setwd("~/repos/dilgrowth/tests")
 
+# run simuls
+system("sh test-003-inter.sh")
+
+# ==============================================================================
 ## Input data
 ### ABUNTABLE: abundance table, output from BacterialCore.py
 ABUNTABLE="testdata/table_glucosa.txt"
 ### PCGTABLE: table with information with each PCG, output from BacterialCore.py
 PCGTABLE="testdata/pcgdata.txt"
+### INTERTABLE: table with information about inter-species interactions
+INTERTABLE="testdata/interactions.txt"
 ### SAMPLENAMES: list/subset of the samples (column headers of $ABUNTABLE) we want to run simulations for
 SAMPLENAMES=c("sa1")
 
@@ -20,7 +28,6 @@ DILUTION=0.1
 GROW_STEP=1
 
 # ==============================================================================
-
 # read abundance table
 exp <- read.csv(
   ABUNTABLE,
@@ -42,38 +49,6 @@ diluted_counts <- table(names(diluted_counts)[.Internal(sample(
   replace = TRUE,
   prob = diluted_counts))])
 
-# ==============================================================================
-
-# NO GROUPS
-this_timestep <- as.vector(diluted_counts)
-this_timestep <- as.numeric(this_timestep)
-
-all_timesteps <- diluted_counts
-
-while (sum(this_timestep) < abun_total) {
-  this_timestep <- growth_one_group(this_timestep,
-                                    abun_total,
-                                    GROW_STEP)
-  all_timesteps <- rbind(all_timesteps, this_timestep)
-}
-
-
-# PLOT
-
-# reshape the data into a long format
-all_timesteps <- data.frame(all_timesteps, check.names = F)
-all_timesteps$time <- 1:nrow(all_timesteps)
-df_long <- tidyr::gather(all_timesteps, key = "variable", value = "value", -time)
-
-# create plot
-p <- ggplot(df_long, aes(x = time, y = value, group=variable, color=variable)) +
-  geom_line() +
-  labs(x = "Time", y = "value", title = "no groups")
-print(p)
-
-
-# ==============================================================================
-
 # parse PCG table if everything's OK
 pcg_table <- read.csv(PCGTABLE, sep="\t")
 pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
@@ -90,9 +65,11 @@ for (group in 1:nrow(pcg_table)) {
   carrying_capacities[rownames(counts) %in% leaves]        <- (pcg_table$Average[group] * abun_total) %>% round
 }
 
-# ==============================================================================
+# parse interactions table
+interactions = read.csv(file = INTERTABLE, row.names = 1, check.names = F)
 
-# GROUPS, LOGISTIC
+# ==============================================================================
+# GROUPS, NON-LOGISTIC
 
 this_timestep <- as.vector(diluted_counts)
 this_timestep <- as.numeric(this_timestep)
@@ -100,7 +77,7 @@ this_timestep <- as.numeric(this_timestep)
 all_timesteps_log <- diluted_counts
 new_carrying_capacities <- carrying_capacities[rownames(counts) %in% names(diluted_counts)]
 
-# Check if any group has no abundance
+# Check if any group has no abundance (optional step)
 sum_by_group <- c()
 groups <- unique(names(carrying_capacities))
 for (group in groups) {
@@ -116,9 +93,11 @@ if (length(zero_groups) > 0) {
   }
 }
 
-while (round(sum(this_timestep)) < abun_total) { # "round" to avoid infinitesimally small differences
-  this_timestep <- growth_log(x = this_timestep,
-                              carrying_capacities = new_carrying_capacities)
+while (sum(this_timestep) < abun_total) {
+  this_timestep <- growth(x = this_timestep,
+                          grow_step = 1,
+                          carrying_capacities = new_carrying_capacities,
+                          interactions = interactions)
   all_timesteps_log <- rbind(all_timesteps_log, this_timestep)
 }
 
@@ -137,7 +116,7 @@ df_long_log$PCG <- leaf_to_pcg[df_long_log$variable]
 df_long_log$PCG[is.na(df_long_log$PCG)] <- "others"
 
 # create plot
-q <- ggplot(df_long_log, aes(x = time, y = value, group = variable, color = PCG)) +
+p <- ggplot(df_long_log, aes(x = time, y = value, group = variable, color = PCG)) +
   geom_line() +
   labs(x = "Time", y = "value", title = "logistic")
-print(q)
+print(p)

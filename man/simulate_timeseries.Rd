@@ -9,6 +9,8 @@ dilution, a random organism is duplicated}
 simulate_timeseries(
   counts_data,
   carrying_capacities = NULL,
+  interactions = NULL,
+  logistic = FALSE,
   dilution = 8 * 10^(-3),
   no_of_dil = 12,
   fixation_at = 1,

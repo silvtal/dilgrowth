@@ -5,6 +5,9 @@
 #' Uses c++ functions for speed
 #'
 #' @param counts_data
+#' @param carrying_capacities
+#' @param interactions
+#' @param logistic
 #' @param dilution
 #' @param no_of_dil
 #' @param fixation_at
@@ -18,6 +21,8 @@
 #' @export
 simulate_timeseries <- function (counts_data,
                                  carrying_capacities=NULL,
+                                 interactions=NULL,
+                                 logistic=FALSE,
                                  dilution=8*10**(-3), # format: 0.1 instead of 10(%)
                                  no_of_dil=12,
                                  fixation_at=1,
@@ -98,26 +103,29 @@ simulate_timeseries <- function (counts_data,
       this_timestep <- temp[names(empty)]
     }
 
-    # (1) hago que los bichos se dupliquen al azar mediante sampling hasta
-    # llegar a la cantidad inicial (while loop)
+    # Prepare the growth loop
+    if (!(is.null(interactions))) {
+      interactions <- as.matrix(interactions)
+    }
+
     ns <- names(this_timestep)
 
     this_timestep <- as.vector(this_timestep)
     this_timestep <- as.numeric(this_timestep)
     if (is.null(carrying_capacities)) {
-      # ===================================
-      # Growth without groups
-      # ===================================
+      # ==========================================
+      # Growth without groups (growth_one_group())
+      # ==========================================
       while (sum(this_timestep) < abun_total) {
         grow_step     <- check_step(this_timestep, abun_total, grow_step)
-        this_timestep <- growth(this_timestep,
-                                abun_total,
-                                grow_step) # TODO add interactions
+        this_timestep <- growth_one_group(this_timestep,
+                                          grow_step,
+                                          interactions)
       }
     } else {
-      # ===================================
-      # Growth by group
-      # ===================================
+      # =========================================
+      # Growth by group (growth() / growth_log())
+      # =========================================
       # Check if any group has no abundance
       sum_by_group <- c()
       groups <- unique(names(carrying_capacities))
@@ -136,13 +144,36 @@ simulate_timeseries <- function (counts_data,
           }
         }
       }
-
-      while (round(sum(this_timestep)) < abun_total) { # "round" to avoid infinitesimally small differences
-        this_timestep <- growth_log(x = this_timestep,
-                                   carrying_capacities = carrying_capacities)
+      # Choose growth function; we could out "empty" groups for speed reasons;
+      # that is, redefining carrying_capacity and interactions so they don't
+      # contain species from zero groups. But it's not necessary.
+      # The important bit is to redefine abun_total to avoid an infinite loop.
+      # (As a side note: imagine groups G1(70%), G2(20%) and G3(10%). If G2
+      # becomes a zero group after dilution, group_growth in growth_per_group()
+      # would go from 70/100=0.7 to 70/80=0.875 for G1 and from 10/100=0.1 to
+      # 10/80=0.125 for G3. However, the G1/G3 ratio stays the same: 0.7/0.1=
+      # =0.875/0.125=7. So it doesn't matter if we don't filter out zero groups)
+      if (logistic) {
+        while (round(sum(this_timestep)) < abun_total) { # "round" to avoid infinitesimally small differences
+          grow_step     <- check_step(this_timestep, abun_total, grow_step)
+          this_timestep <- growth_log(
+            x = this_timestep,
+            carrying_capacities = carrying_capacities,
+            interactions = interactions
+          )
         }
+      } else {
+        while (sum(this_timestep)+1 < abun_total) {
+          grow_step     <- check_step(this_timestep, abun_total, grow_step)
+          this_timestep <- growth(
+            x = this_timestep,
+            carrying_capacities = carrying_capacities,
+            grow_step = grow_step,
+            interactions = interactions
+          )
+        }
+      }
     }
-
 
     names(this_timestep) <- ns
 

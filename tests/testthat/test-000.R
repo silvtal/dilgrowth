@@ -1,2 +1,2 @@
 setwd("..")
-system("sh test.sh")
+system("sh test-000.sh")

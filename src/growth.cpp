@@ -5,8 +5,8 @@ using namespace Rcpp;
 using namespace std;
 
 // [[Rcpp::depends(RcppArmadillo)]]
+//' Sampling function for growth_one_group()
 //' @export
-//' Sampling function for growth()
 // [[Rcpp::export]]
 NumericVector pick_new_bugs(NumericVector x,
                              double size,
@@ -16,7 +16,6 @@ NumericVector pick_new_bugs(NumericVector x,
   return (pos);
 }
 
-//' @export
 //' This Rcpp function simulates the growth of a population of organisms over a
 //' specified time step. It takes the current population abundance, the maximum
 //' growth rate, and the maximum total abundance as inputs, and returns an
@@ -36,10 +35,11 @@ NumericVector pick_new_bugs(NumericVector x,
 //' population, 1 by default.
 //' @param interactions An optional numeric matrix representing the interaction
 //' between organisms in the population. This argument is set to R_NilValue by default.
+//' @export
 // [[Rcpp::export]]
-NumericVector growth(NumericVector this_timestep,
-                     int grow_step,
-                     Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue) {
+NumericVector growth_one_group(NumericVector this_timestep,
+                               int grow_step,
+                               Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue) {
 
   // We will sample the growth positions from here
   NumericVector arr(this_timestep.size());
@@ -49,12 +49,13 @@ NumericVector growth(NumericVector this_timestep,
   // Account for interactions if present
   NumericVector prob = this_timestep/sum((this_timestep)); // abs abundances
   if (interactions.isNotNull()) {
-    prob = wrap(as<arma::vec>(prob) + (as<arma::mat>(interactions) * as<arma::vec>(prob))); // x * (r + A * x) == rx + A·x*2
-    // 26x1                      // 26x26                  // 26x1  // diag of A here is 0. Summing here is equivalent to having a diagonal of 1.
-  } else {
-    prob = as<arma::vec>(prob); // x * (r + A * x) == rx + A·x*2
+    prob = wrap(as<arma::vec>(prob) + (as<arma::mat>(interactions.get()) * as<arma::vec>(prob)));
+    for (int i = 0; i < prob.size(); i++) { // no negative probabilities allowed
+      if (prob[i] < 0) {
+        prob[i] = 0;
+      }
+    }
   }
-  prob[prob < 0] = 0; // no negative probabilities
 
   // Grow (loop: as many times as "step" indicates)
   NumericVector new_bugs = pick_new_bugs(arr, grow_step, FALSE, prob);
@@ -67,20 +68,6 @@ NumericVector growth(NumericVector this_timestep,
 }
 
 
-//' @export
-//' This function consists in a loop that runs growth() as many times as needed
-//' to reach a given population size.
-// [[Rcpp::export]]
-NumericVector full_growth(NumericVector this_timestep, int abun_total, int grow_step) {
-  while (sum(this_timestep) < abun_total) {
-    grow_step = check_step(this_timestep, abun_total, grow_step);
-    this_timestep = growth(this_timestep, grow_step);
-  }
-  return(this_timestep);
-}
-
-
-
 // [[Rcpp::depends(RcppArmadillo)]]
 //' This function simulates growth in a community by looking at the carrying
 //' capacities of the group they belong to. It takes a named vector,
@@ -90,35 +77,40 @@ NumericVector full_growth(NumericVector this_timestep, int abun_total, int grow_
 //' time this function is called, but whether they will is random and depends on
 //' their abundance (random). They grow at different rates depending not
 //' only on which group they belong to but also on their carrying capacity.
+//' Growth is not logistic.
 //'
-//' As opposed to growth(), the total growth rate is defined by the sum of the
-//' growth rates of every group, which are defined as
+//' As opposed to growth_one_group(), the total growth rate is defined by the
+//' sum of the growth rates of every group, which are defined as
 //' \[grow_step * group's % of total carrying capacity]. Every group will have
 //' grow_step (by default 1) of its members grow in each run, and they can be
 //' from the same species or not. Also, how much will each species grow is
 //' proportional to the carrying capacity of its group. This is to avoid group
 //' extinction and also to ensure growth has a similar, proportional rate for
 //' each group so all groups reach their CC at the same time.
-//'
+//'`
 //' @export
 // [[Rcpp::export]]
-NumericVector growth_per_group(NumericVector x,
-                               NumericVector carrying_capacities,
-                               int grow_step,
-                               Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue) { // named vector
+NumericVector growth(NumericVector x,
+                     NumericVector carrying_capacities,
+                     int grow_step,
+                     Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue) { // named vector
+
   // Set variables
   double size = carrying_capacities.length();
   NumericVector newx = x;
   NumericVector prob = x/sum((x));
   CharacterVector names  = carrying_capacities.attr("names");
   CharacterVector groups = unique(names);
+  NumericVector group_ccs = carrying_capacities[groups];
 
   // Account for interactions if present
   if (interactions.isNotNull()) {
-    prob = wrap(as<arma::vec>(prob) + (as<arma::mat>(interactions) * as<arma::vec>(prob))); // x * (r + A * x) == rx + A·x*2
-    // 26x1                      // 26x26                  // 26x1  // diag of A here is 0. Summing here is equivalent to having a diagonal of 1.
-  } else {
-    prob = as<arma::vec>(prob); // x * (r + A * x) == rx + A·x*2
+    prob = wrap(as<arma::vec>(prob) + (as<arma::mat>(interactions.get()) * as<arma::vec>(prob)));
+    for (int i = 0; i < prob.size(); i++) { // no negative probabilities allowed
+      if (prob[i] < 0) {
+        prob[i] = 0;
+      }
+    }
   }
 
   // Growth per group
@@ -141,7 +133,7 @@ NumericVector growth_per_group(NumericVector x,
     int bug;
     for (std::size_t i = 0; i < new_bugs.size(); i++) {  // grow_step times
       bug = new_bugs[i];
-      x[bug] = (x[bug] + (1.0 * carrying_capacities[LogicalVector (carrying_capacities.attr("names")==groups[i])][0])); // % of total CC
+      newx[bug] += (1.0 * (group_ccs[group]/sum(group_ccs))); // % of total CC
       }
     }
   return newx;
@@ -160,14 +152,13 @@ NumericVector growth_per_group(NumericVector x,
 //' only on which group they belong to but also to how close they are to their
 //' carrying capacity (logistic)
 //'
-//' As opposed to growth(), the growth rate is given by a logistic function and
-//' not grow_step. Another difference is that growing species are not chosen one
-//' by one by sampling, but with a binomial function. That means that the number
-//' of different species that can grow in each iteration of this function is not
-//' limited.
+//' As opposed to growth_one_group(), the growth rate is given by a logistic
+//' function and not grow_step. Another difference is that growing species are
+//' not chosen one by one by sampling, but with a binomial function. That means
+//' that the number of different species that can grow in each iteration of this
+//' function is not limited.
 //'
-//' The difference with growth_by_group() is that growth is logistic in this
-//' function.
+//' The difference with growth() is that growth is logistic in this function.
 //'
 //' If the carrying capacity for a group was surpassed before starting the
 //' growth cycle, the species of that group will die at a proportionate rate,
@@ -204,10 +195,12 @@ NumericVector growth_log(NumericVector x,
 
     // Account for interactions if present
     if (interactions.isNotNull()) {
-      prob = wrap(as<arma::vec>(prob) + (as<arma::mat>(interactions) * as<arma::vec>(prob))); // x * (r + A * x) == rx + A·x*2
-      // 26x1                      // 26x26                  // 26x1  // diag of A here is 0. Summing here is equivalent to having a diagonal of 1.
-    } else {
-      prob = as<arma::vec>(prob); // x * (r + A * x) == rx + A·x*2
+      prob = wrap(as<arma::vec>(prob) + (as<arma::mat>(interactions.get()) * as<arma::vec>(prob)));
+      for (int i = 0; i < prob.size(); i++) { // no negative probabilities allowed
+        if (prob[i] < 0) {
+          prob[i] = 0;
+        }
+      }
     }
 
     // Here, we randomly determine whether each species in the group will grow
@@ -215,10 +208,64 @@ NumericVector growth_log(NumericVector x,
       if (g[i]) {
         if (rbinom(1, 1, prob[i])[0] == 1) { // more likely to grow or die if more abundant <- nothing if 0
           double growth_step(2 * (1 - sum_group / carrying_capacities[i]));
-          newx[i] = x[i] + max(NumericVector(1, growth_step));
+          newx[i] += max(NumericVector(1, growth_step));
         }
       }
     }
   }
   return newx;
+}
+
+
+//' @export
+// [[Rcpp::export]]
+int check_step(NumericVector this_timestep,
+               int abun_total,
+               int grow_step) {
+  // Choose "step" (this is why we need "abun_total")
+  int step;
+  if ((sum(this_timestep) + grow_step) > abun_total) {
+    // Avoid growing too much (when step>1)
+    step = (abun_total - sum(this_timestep));
+
+  } else if (sum(this_timestep) < grow_step) {
+    // Ensure it is not too big of a step
+    int half = trunc(sum(this_timestep)/2);
+    step = std::max(half, 1);
+
+  } else {
+    // If grow_step is OK
+    step = grow_step;
+  }
+  return(step);
+}
+
+
+//' This function consists in a loop that runs growth(...)() functions as many
+//' times as needed to reach a given population size.
+//' @export
+// [[Rcpp::export]]
+NumericVector full_growth(NumericVector this_timestep,
+                          int grow_step,
+                          int abun_total,
+                          String func = "growth",
+                          Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue,
+                          Rcpp::Nullable<Rcpp::NumericVector> carrying_capacities = R_NilValue) {
+  if (func == "growth_one_group") {
+    while (sum(this_timestep) < abun_total) {
+      grow_step = check_step(this_timestep, abun_total, grow_step);
+      this_timestep = growth_one_group(this_timestep, grow_step, interactions);
+    }
+  } else if (func == "growth" && carrying_capacities.isNotNull()) {
+    while (sum(this_timestep) < abun_total) {
+      grow_step = check_step(this_timestep, abun_total, grow_step);
+      this_timestep = growth(this_timestep, carrying_capacities.get(), grow_step, interactions);
+    }
+  } else if (func == "growth_log" && carrying_capacities.isNotNull()) {
+    while (round(sum(this_timestep)) < abun_total) {
+      grow_step = check_step(this_timestep, abun_total, grow_step);
+      this_timestep = growth_log(this_timestep, carrying_capacities.get(), interactions);
+    }
+    return(this_timestep);
+  }
 }

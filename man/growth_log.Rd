@@ -16,14 +16,13 @@ only on which group they belong to but also to how close they are to their
 carrying capacity (logistic)
 }
 \details{
-As opposed to growth(), the growth rate is given by a logistic function and
-not grow_step. Another difference is that growing species are not chosen one
-by one by sampling, but with a binomial function. That means that the number
-of different species that can grow in each iteration of this function is not
-limited.
+As opposed to growth_one_group(), the growth rate is given by a logistic
+function and not grow_step. Another difference is that growing species are
+not chosen one by one by sampling, but with a binomial function. That means
+that the number of different species that can grow in each iteration of this
+function is not limited.
 
-The difference with growth_by_group() is that growth is logistic in this
-function.
+The difference with growth() is that growth is logistic in this function.
 
 If the carrying capacity for a group was surpassed before starting the
 growth cycle, the species of that group will die at a proportionate rate,

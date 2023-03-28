@@ -89,6 +89,9 @@ option_list <- list(
   make_option(c("-s", "--sample"), type = "character",
               default = NULL,
               help = "Sample name in the abundance table"),
+  make_option(c("-i", "--interactions"), type = "character",
+              default = NULL,
+              help = "Path to a .csv interactions table"),
   make_option(c("--selected_species"), type = "character",
               default = NULL,
               help = "semicolon-separated list of species to select from the abundance table"),
@@ -107,6 +110,9 @@ option_list <- list(
   make_option(c("--grow_step"), type = "integer",
               default = 1,
               help = "How many bugs are born on each iteration. 1 by default"),
+  make_option(c("--logistic"), type = "logical",
+              default = FALSE,
+              help = "¿Should growth be logistic? If TRUE, the grow_step/growth rate of each species will change over the course of the simulation, in a logistic growth manner (see growth_log)."),
   make_option(c("--cores"), type = "integer",
               default = 1,
               help = "Number of cores to use in parallelization processes (mclapply). Default: 4.",
@@ -130,6 +136,7 @@ abuntable  <- opt$abuntable  # e.g. "./original_100percArbol/Tree/0.99/table.fro
 skip_lines_abuntable <- opt$skip_lines_abuntable
 pcgtable <- opt$pcgtable
 s <- opt$sample      # e.g. "X2", "sa2"...
+interactions <- opt$interactions
 selected_species <- opt$selected_species
 
 outdir <- opt$outdir # e.g. "my_neutral_model_v2_test_16_simuls_8_cores"
@@ -138,6 +145,7 @@ cores <- opt$cores  # e.g. 16
 
 save_all  <- opt$save_all
 grow_step <- opt$grow_step
+logistic <- opt$logistic
 
 dilution <-  eval(parse(text=opt$dilution)) # e.g. 8 * 10 ** (-3)
 no_of_dil <- opt$no_of_dil
@@ -163,6 +171,11 @@ if (!(is.null(pcgtable))) {
   pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
   pcg_table <- pcg_table[c("Core", "Average", "Leaves")]
   pcg_table$Average <- as.numeric(pcg_table$Average)
+}
+
+# read interactions table
+if (!(is.null(interactions))) {
+  interactions <- read.csv(file = interactions, row.names = 1, check.names = F)
 }
 
 # create output dir
@@ -207,7 +220,7 @@ if (abun_total == 0) {
       names(carrying_capacities)[rownames(counts) %in% leaves] <- pcg_table$Core[group]
       carrying_capacities[rownames(counts) %in% leaves]        <- (pcg_table$Average[group] * abun_total) %>% round
     }
-    message(paste0("Simulating logistic growth for groups: ", paste0(unique(pcg_table$Core), collapse = ", "), "."))
+    message(paste0("Simulating logistic growth for groups: ", paste0(c(unique(pcg_table$Core), "others"), collapse = ", "), "."))
   } else {
     carrying_capacities=NULL
     message("No PCG table provided; simulating growth without groups")
@@ -218,6 +231,8 @@ if (abun_total == 0) {
   abund_temp <- mclapply(X = 1:no_of_simulations,
                          FUN = function(iter) {
                            trajectory <- simulate_timeseries(counts,
+                                                             interactions = interactions,
+                                                             logistic = logistic,
                                                              abun_total = abun_total,
                                                              carrying_capacities = carrying_capacities,
                                                              dilution = dilution,
