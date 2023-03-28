@@ -11,6 +11,19 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// check_step
+int check_step(NumericVector this_timestep, int abun_total, int grow_step);
+RcppExport SEXP _dilgrowth_check_step(SEXP this_timestepSEXP, SEXP abun_totalSEXP, SEXP grow_stepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type this_timestep(this_timestepSEXP);
+    Rcpp::traits::input_parameter< int >::type abun_total(abun_totalSEXP);
+    Rcpp::traits::input_parameter< int >::type grow_step(grow_stepSEXP);
+    rcpp_result_gen = Rcpp::wrap(check_step(this_timestep, abun_total, grow_step));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pick_new_bugs
 NumericVector pick_new_bugs(NumericVector x, double size, bool replace, NumericVector prob);
 RcppExport SEXP _dilgrowth_pick_new_bugs(SEXP xSEXP, SEXP sizeSEXP, SEXP replaceSEXP, SEXP probSEXP) {
@@ -26,50 +39,66 @@ BEGIN_RCPP
 END_RCPP
 }
 // growth
-NumericVector growth(NumericVector this_timestep, int abun_total, double grow_step, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
-RcppExport SEXP _dilgrowth_growth(SEXP this_timestepSEXP, SEXP abun_totalSEXP, SEXP grow_stepSEXP, SEXP interactionsSEXP) {
+NumericVector growth(NumericVector this_timestep, int grow_step, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
+RcppExport SEXP _dilgrowth_growth(SEXP this_timestepSEXP, SEXP grow_stepSEXP, SEXP interactionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type this_timestep(this_timestepSEXP);
-    Rcpp::traits::input_parameter< int >::type abun_total(abun_totalSEXP);
-    Rcpp::traits::input_parameter< double >::type grow_step(grow_stepSEXP);
+    Rcpp::traits::input_parameter< int >::type grow_step(grow_stepSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type interactions(interactionsSEXP);
-    rcpp_result_gen = Rcpp::wrap(growth(this_timestep, abun_total, grow_step, interactions));
+    rcpp_result_gen = Rcpp::wrap(growth(this_timestep, grow_step, interactions));
     return rcpp_result_gen;
 END_RCPP
 }
 // full_growth
-NumericVector full_growth(NumericVector this_timestep, int abun_total, double grow_step);
+NumericVector full_growth(NumericVector this_timestep, int abun_total, int grow_step);
 RcppExport SEXP _dilgrowth_full_growth(SEXP this_timestepSEXP, SEXP abun_totalSEXP, SEXP grow_stepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type this_timestep(this_timestepSEXP);
     Rcpp::traits::input_parameter< int >::type abun_total(abun_totalSEXP);
-    Rcpp::traits::input_parameter< double >::type grow_step(grow_stepSEXP);
+    Rcpp::traits::input_parameter< int >::type grow_step(grow_stepSEXP);
     rcpp_result_gen = Rcpp::wrap(full_growth(this_timestep, abun_total, grow_step));
     return rcpp_result_gen;
 END_RCPP
 }
-// growth_log
-NumericVector growth_log(NumericVector x, NumericVector carrying_capacities);
-RcppExport SEXP _dilgrowth_growth_log(SEXP xSEXP, SEXP carrying_capacitiesSEXP) {
+// growth_per_group
+NumericVector growth_per_group(NumericVector x, NumericVector carrying_capacities, int grow_step, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
+RcppExport SEXP _dilgrowth_growth_per_group(SEXP xSEXP, SEXP carrying_capacitiesSEXP, SEXP grow_stepSEXP, SEXP interactionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type carrying_capacities(carrying_capacitiesSEXP);
-    rcpp_result_gen = Rcpp::wrap(growth_log(x, carrying_capacities));
+    Rcpp::traits::input_parameter< int >::type grow_step(grow_stepSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type interactions(interactionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(growth_per_group(x, carrying_capacities, grow_step, interactions));
+    return rcpp_result_gen;
+END_RCPP
+}
+// growth_log
+NumericVector growth_log(NumericVector x, NumericVector carrying_capacities, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
+RcppExport SEXP _dilgrowth_growth_log(SEXP xSEXP, SEXP carrying_capacitiesSEXP, SEXP interactionsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type carrying_capacities(carrying_capacitiesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type interactions(interactionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(growth_log(x, carrying_capacities, interactions));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_dilgrowth_check_step", (DL_FUNC) &_dilgrowth_check_step, 3},
     {"_dilgrowth_pick_new_bugs", (DL_FUNC) &_dilgrowth_pick_new_bugs, 4},
-    {"_dilgrowth_growth", (DL_FUNC) &_dilgrowth_growth, 4},
+    {"_dilgrowth_growth", (DL_FUNC) &_dilgrowth_growth, 3},
     {"_dilgrowth_full_growth", (DL_FUNC) &_dilgrowth_full_growth, 3},
-    {"_dilgrowth_growth_log", (DL_FUNC) &_dilgrowth_growth_log, 2},
+    {"_dilgrowth_growth_per_group", (DL_FUNC) &_dilgrowth_growth_per_group, 4},
+    {"_dilgrowth_growth_log", (DL_FUNC) &_dilgrowth_growth_log, 3},
     {NULL, NULL, 0}
 };
 

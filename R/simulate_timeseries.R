@@ -109,6 +109,7 @@ simulate_timeseries <- function (counts_data,
       # Growth without groups
       # ===================================
       while (sum(this_timestep) < abun_total) {
+        grow_step     <- check_step(this_timestep, abun_total, grow_step)
         this_timestep <- growth(this_timestep,
                                 abun_total,
                                 grow_step) # TODO add interactions
@@ -138,7 +139,7 @@ simulate_timeseries <- function (counts_data,
 
       while (round(sum(this_timestep)) < abun_total) { # "round" to avoid infinitesimally small differences
         this_timestep <- growth_log(x = this_timestep,
-                                   carrying_capacities = carrying_capacities)  # TODO add interactions
+                                   carrying_capacities = carrying_capacities)
         }
     }
 

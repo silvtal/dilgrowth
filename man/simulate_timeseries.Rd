@@ -19,8 +19,7 @@ simulate_timeseries(
 )
 }
 \arguments{
-\item{abun_total}{Total abundance for the community to grow in each dilution-growth
-cycle. When this value is reached, the cycle ends and another dilution (if needed)
+\item{fixation_at}{cycle. When this value is reached, the cycle ends and another dilution (if needed)
 happens. If NULL, \code{abun_total} is set to the initial total abundance}
 
 \item{grow_step}{Number of individuals that grow each timestep (Default: 1)}

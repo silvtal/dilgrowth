@@ -2,35 +2,95 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
+check_step <- function(this_timestep, abun_total, grow_step) {
+    .Call(`_dilgrowth_check_step`, this_timestep, abun_total, grow_step)
+}
+
+#' @export
+#' Sampling function for growth()
 pick_new_bugs <- function(x, size, replace, prob) {
     .Call(`_dilgrowth_pick_new_bugs`, x, size, replace, prob)
 }
 
 #' @export
-growth <- function(this_timestep, abun_total, grow_step, interactions = NULL) {
-    .Call(`_dilgrowth_growth`, this_timestep, abun_total, grow_step, interactions)
+#' This Rcpp function simulates the growth of a population of organisms over a
+#' specified time step. It takes the current population abundance, the maximum
+#' growth rate, and the maximum total abundance as inputs, and returns an
+#' updated abundance vector that reflects the growth of the population. The
+#' function calculates the growth rate based on the current population
+#' abundance and the maximum possible total abundance, and calculates
+#' the probability of growth for each organism in the population based on their
+#' current abundance and any specified interactions between organisms. The
+#' function then randomly selects organisms to grow based on these probabilities
+#' and increases their abundance by grow_step (1 by default).
+#' The function takes four arguments:
+#' @param this_timestep A numeric vector representing the current abundance of
+#' each organism in the population.
+#' @param abun_total An integer representing the maximum total abundance that
+#' the population can reach.
+#' @param grow_step An integer representing the maximum growth rate of the
+#' population, 1 by default.
+#' @param interactions An optional numeric matrix representing the interaction
+#' between organisms in the population. This argument is set to R_NilValue by default.
+growth <- function(this_timestep, grow_step, interactions = NULL) {
+    .Call(`_dilgrowth_growth`, this_timestep, grow_step, interactions)
 }
 
 #' @export
+#' This function consists in a loop that runs growth() as many times as needed
+#' to reach a given population size.
 full_growth <- function(this_timestep, abun_total, grow_step) {
     .Call(`_dilgrowth_full_growth`, this_timestep, abun_total, grow_step)
 }
 
 #' This function simulates growth in a community by looking at the carrying
-#' capacities of each species, which they have in common with other species in
-#' their group. It takes a named vector, carrying_capacities.
+#' capacities of the group they belong to. It takes a named vector,
+#' carrying_capacities.
+#'
+#' Growth is RANDOM: all species have the opportunity to grow each
+#' time this function is called, but whether they will is random and depends on
+#' their abundance (random). They grow at different rates depending not
+#' only on which group they belong to but also on their carrying capacity.
+#'
+#' As opposed to growth(), the total growth rate is defined by the sum of the
+#' growth rates of every group, which are defined as
+#' \[grow_step * group's % of total carrying capacity]. Every group will have
+#' grow_step (by default 1) of its members grow in each run, and they can be
+#' from the same species or not. Also, how much will each species grow is
+#' proportional to the carrying capacity of its group. This is to avoid group
+#' extinction and also to ensure growth has a similar, proportional rate for
+#' each group so all groups reach their CC at the same time.
+#'
+#' @export
+growth_per_group <- function(x, carrying_capacities, grow_step, interactions = NULL) {
+    .Call(`_dilgrowth_growth_per_group`, x, carrying_capacities, grow_step, interactions)
+}
+
+#' This function simulates growth in a community by looking at the carrying
+#' capacities of the group they belong to. It takes a named vector,
+#' carrying_capacities.
 #'
 #' Growth is RANDOM but logistic: all species have the opportunity to grow each
 #' time this function is called, but whether they will is random and depends on
-#' their abundance (random), but they grow at different rates depending not
+#' their abundance (random). They grow at different rates depending not
 #' only on which group they belong to but also to how close they are to their
-#' carrying capacity  (logistic)
+#' carrying capacity (logistic)
 #'
-#' If the carrying capacity for a group was surpassed already, the species of
-#' that group will die at a proportionate rate, while the others may grow.
+#' As opposed to growth(), the growth rate is given by a logistic function and
+#' not grow_step. Another difference is that growing species are not chosen one
+#' by one by sampling, but with a binomial function. That means that the number
+#' of different species that can grow in each iteration of this function is not
+#' limited.
+#'
+#' The difference with growth_by_group() is that growth is logistic in this
+#' function.
+#'
+#' If the carrying capacity for a group was surpassed before starting the
+#' growth cycle, the species of that group will die at a proportionate rate,
+#' while the others may grow.
 #'
 #' @export
-growth_log <- function(x, carrying_capacities) {
-    .Call(`_dilgrowth_growth_log`, x, carrying_capacities)
+growth_log <- function(x, carrying_capacities, interactions = NULL) {
+    .Call(`_dilgrowth_growth_log`, x, carrying_capacities, interactions)
 }
 

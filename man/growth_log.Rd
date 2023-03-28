@@ -3,19 +3,29 @@
 \name{growth_log}
 \alias{growth_log}
 \title{This function simulates growth in a community by looking at the carrying
-capacities of each species, which they have in common with other species in
-their group. It takes a named vector, carrying_capacities.}
+capacities of the group they belong to. It takes a named vector,
+carrying_capacities.}
 \usage{
-growth_log(x, carrying_capacities)
+growth_log(x, carrying_capacities, interactions = NULL)
 }
 \description{
 Growth is RANDOM but logistic: all species have the opportunity to grow each
 time this function is called, but whether they will is random and depends on
-their abundance (random), but they grow at different rates depending not
+their abundance (random). They grow at different rates depending not
 only on which group they belong to but also to how close they are to their
-carrying capacity  (logistic)
+carrying capacity (logistic)
 }
 \details{
-If the carrying capacity for a group was surpassed already, the species of
-that group will die at a proportionate rate, while the others may grow.
+As opposed to growth(), the growth rate is given by a logistic function and
+not grow_step. Another difference is that growing species are not chosen one
+by one by sampling, but with a binomial function. That means that the number
+of different species that can grow in each iteration of this function is not
+limited.
+
+The difference with growth_by_group() is that growth is logistic in this
+function.
+
+If the carrying capacity for a group was surpassed before starting the
+growth cycle, the species of that group will die at a proportionate rate,
+while the others may grow.
 }
