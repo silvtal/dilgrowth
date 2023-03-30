@@ -254,6 +254,7 @@ int check_step(NumericVector this_timestep,
       Rf_error("If grow_step is a percentage, it has to be a value between 0 (0% of the members of the community will grow) and 1 (100% of members will grow, the total abundance will duplicate every iteration).");
     } else {
       step = trunc(grow_step * sum(this_timestep));
+      step = max(1, step); // never less than 1 !!
     }
 
     // Check magnitude of step

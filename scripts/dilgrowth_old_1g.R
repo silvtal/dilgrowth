@@ -85,7 +85,7 @@ option_list <- list(
   make_option(c("--save_all"), type = "logical",
               default = FALSE,
               help = "save all intermediate states of the simulations? default FALSE"),
-  make_option(c("--grow_step"), type = "integer",
+  make_option(c("--grow_step"), type = "double",
               default = 1,
               help = "How many bugs are born on each iteration. 1 by default"),
   make_option(c("--is_grow_step_a_perc"), type = "logical",
