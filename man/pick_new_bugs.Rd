@@ -2,10 +2,14 @@
 % Please edit documentation in R/RcppExports.R
 \name{pick_new_bugs}
 \alias{pick_new_bugs}
-\title{Sampling function for growth_one_group()}
+\title{Sampling function for growth_one_group(), growth()}
 \usage{
-pick_new_bugs(x, size, replace, prob)
+pick_new_bugs(arr, size, replace, prob)
+}
+\arguments{
+\item{arr}{is a vector of positions. If the abundance vector of interest has
+5 members, x must be \link{1 2 3 4 5}.}
 }
 \description{
-Sampling function for growth_one_group()
+Sampling function for growth_one_group(), growth()
 }

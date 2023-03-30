@@ -12,16 +12,16 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // pick_new_bugs
-NumericVector pick_new_bugs(NumericVector x, double size, bool replace, NumericVector prob);
-RcppExport SEXP _dilgrowth_pick_new_bugs(SEXP xSEXP, SEXP sizeSEXP, SEXP replaceSEXP, SEXP probSEXP) {
+NumericVector pick_new_bugs(NumericVector arr, double size, bool replace, NumericVector prob);
+RcppExport SEXP _dilgrowth_pick_new_bugs(SEXP arrSEXP, SEXP sizeSEXP, SEXP replaceSEXP, SEXP probSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type arr(arrSEXP);
     Rcpp::traits::input_parameter< double >::type size(sizeSEXP);
     Rcpp::traits::input_parameter< bool >::type replace(replaceSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type prob(probSEXP);
-    rcpp_result_gen = Rcpp::wrap(pick_new_bugs(x, size, replace, prob));
+    rcpp_result_gen = Rcpp::wrap(pick_new_bugs(arr, size, replace, prob));
     return rcpp_result_gen;
 END_RCPP
 }

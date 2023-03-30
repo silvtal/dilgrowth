@@ -1,13 +1,13 @@
 #!/bin/bash
 
 ## Directories
-RESULTSDIR=testresults
+RESULTSDIR=../testresults
 
 ## Input data
 ### ABUNTABLE: abundance table, output from BacterialCore.py
-export ABUNTABLE=testdata/table_glucosa.txt
+export ABUNTABLE=../testdata/table_glucosa.txt
 ### PCGTABLE: table with information of each PCG, output from BacterialCore.py
-export PCGTABLE=testdata/pcgdata.txt
+export PCGTABLE=../testdata/pcgdata.txt
 ### SAMPLENAMES: list/subset of the samples (column headers of $ABUNTABLE) we want to run simulations for
 export SAMPLENAMES="sa1 sa2"
 
@@ -35,7 +35,7 @@ do
 	## run simuls
   echo
   echo "Let's test the old function (output's separated by PCG)"
-	Rscript ../scripts/dilgrowth_old_1g.R \
+	Rscript ../../scripts/dilgrowth_old_1g.R \
 	-a $ABUNTABLE -s $sa \
 	--dilution $DILUTIONFACTOR --no_of_dil $NO_OF_TRANSFERS --no_of_simulations $NO_OF_SIMULATIONS \
 	--fixation_at $FIXATION_THRESHOLD --fix_percentage $FIX_PERCENTAGE --skip_lines_abuntable 1 \
@@ -44,7 +44,7 @@ do
 
 	## run simuls
 	echo "Let's test the simulations with multiple PCGs"
-	Rscript ../scripts/dilgrowth.R \
+	Rscript ../../scripts/dilgrowth.R \
 	-a $ABUNTABLE -s $sa -p $PCGTABLE \
 	--dilution $DILUTIONFACTOR --no_of_dil $NO_OF_TRANSFERS --no_of_simulations $NO_OF_SIMULATIONS \
 	--fixation_at $FIXATION_THRESHOLD --skip_lines_abuntable 1 \
@@ -53,7 +53,7 @@ do
 
 	## run simuls
 	echo "Let's test the same simulations with stochastic logistic growth (no interactions)"
-	Rscript ../scripts/dilgrowth.R \
+	Rscript ../../scripts/dilgrowth.R \
 	-a $ABUNTABLE -s $sa -p $PCGTABLE \
 	--logistic TRUE \
 	--dilution $DILUTIONFACTOR --no_of_dil $NO_OF_TRANSFERS --no_of_simulations $NO_OF_SIMULATIONS \

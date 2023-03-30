@@ -5,14 +5,16 @@ using namespace Rcpp;
 using namespace std;
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' Sampling function for growth_one_group()
+//' Sampling function for growth_one_group(), growth()
+//' @param arr is a vector of positions. If the abundance vector of interest has
+//' 5 members, x must be [1 2 3 4 5].
 //' @export
 // [[Rcpp::export]]
-NumericVector pick_new_bugs(NumericVector x,
-                             double size,
+NumericVector pick_new_bugs(NumericVector arr,
+                            double size,
                             bool replace,
                             NumericVector prob) {
-  NumericVector pos = RcppArmadillo::sample(x, size, replace, prob);
+  NumericVector pos = RcppArmadillo::sample(arr, size, replace, prob);
   return (pos);
 }
 
@@ -97,11 +99,14 @@ NumericVector growth(NumericVector x,
 
   // Set variables
   double size = carrying_capacities.length();
-  NumericVector newx = x;
   NumericVector prob = x/sum((x));
   CharacterVector names  = carrying_capacities.attr("names");
   CharacterVector groups = unique(names);
   NumericVector group_ccs = carrying_capacities[groups];
+  NumericVector arr(x.size());
+  for (int i = 0; i < x.size(); ++i) {
+    arr[i] = i;
+  }
 
   // Account for interactions if present
   if (interactions.isNotNull()) {
@@ -111,6 +116,11 @@ NumericVector growth(NumericVector x,
         prob[i] = 0;
       }
     }
+  }
+
+  // Stop if all probabilities become 0
+  if (sum(prob)==0) {
+    Rf_error("After accounting for interactions, all probabilities became 0. No growth possible. Check the interaction matrix.");
   }
 
   // Growth per group
@@ -129,14 +139,18 @@ NumericVector growth(NumericVector x,
         group_prob[i] = 0;
       }
     }
-    NumericVector new_bugs = pick_new_bugs(x, grow_step, FALSE, group_prob);
+    // Stop if no one can grow in this group
+    if (sum(group_prob)==0) {
+      continue;
+    }
+    NumericVector new_bugs = pick_new_bugs(arr, grow_step, FALSE, group_prob);
     int bug;
-    for (std::size_t i = 0; i < new_bugs.size(); i++) {  // grow_step times
+    for (int i = 0; i < new_bugs.size(); i++) {  // grow_step times
       bug = new_bugs[i];
-      newx[bug] += (1.0 * (group_ccs[group]/sum(group_ccs))); // % of total CC
+      x[bug] += (1.0 * (group_ccs[group]/sum(group_ccs))); // % of total CC
       }
     }
-  return newx;
+  return x;
 }
 
 
@@ -224,7 +238,7 @@ int check_step(NumericVector this_timestep,
                int grow_step) {
   // Choose "step" (this is why we need "abun_total")
   int step;
-  if ((sum(this_timestep) + grow_step) > abun_total) {
+  if (trunc((sum(this_timestep)) + grow_step) > abun_total) { // trunc: this_timestep might not have whole numbers.
     // Avoid growing too much (when step>1)
     step = (abun_total - sum(this_timestep));
 
@@ -254,17 +268,17 @@ NumericVector full_growth(NumericVector this_timestep,
   if (func == "growth_one_group") {
     while (sum(this_timestep) < abun_total) {
       grow_step = check_step(this_timestep, abun_total, grow_step);
-      this_timestep = growth_one_group(this_timestep, grow_step, interactions);
+      this_timestep = growth_one_group(this_timestep, grow_step, interactions.get());
     }
   } else if (func == "growth" && carrying_capacities.isNotNull()) {
     while (sum(this_timestep) < abun_total) {
       grow_step = check_step(this_timestep, abun_total, grow_step);
-      this_timestep = growth(this_timestep, carrying_capacities.get(), grow_step, interactions);
+      this_timestep = growth(this_timestep, carrying_capacities.get(), grow_step, interactions.get());
     }
   } else if (func == "growth_log" && carrying_capacities.isNotNull()) {
     while (round(sum(this_timestep)) < abun_total) {
       grow_step = check_step(this_timestep, abun_total, grow_step);
-      this_timestep = growth_log(this_timestep, carrying_capacities.get(), interactions);
+      this_timestep = growth_log(this_timestep, carrying_capacities.get(), interactions.get());
     }
     return(this_timestep);
   }

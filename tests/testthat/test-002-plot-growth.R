@@ -8,9 +8,9 @@ library("tidyverse")
 
 ## Input data
 ### ABUNTABLE: abundance table, output from BacterialCore.py
-ABUNTABLE="testdata/table_glucosa.txt"
+ABUNTABLE="../testdata/table_glucosa.txt"
 ### PCGTABLE: table with information with each PCG, output from BacterialCore.py
-PCGTABLE="testdata/pcgdata.txt"
+PCGTABLE="../testdata/pcgdata.txt"
 ### SAMPLENAMES: list/subset of the samples (column headers of $ABUNTABLE) we want to run simulations for
 SAMPLENAMES=c("sa1")
 
@@ -51,8 +51,8 @@ this_timestep <- as.numeric(this_timestep)
 all_timesteps <- diluted_counts
 
 while (sum(this_timestep) < abun_total) {
+  GROW_STEP <- check_step(this_timestep, abun_total, GROW_STEP)
   this_timestep <- growth_one_group(this_timestep,
-                                    abun_total,
                                     GROW_STEP)
   all_timesteps <- rbind(all_timesteps, this_timestep)
 }

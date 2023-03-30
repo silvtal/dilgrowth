@@ -1,9 +1,9 @@
 # ==============================================================================
 # This test creates simulation data similarly to test-000, with growth over 10
 # transfers. Also plots the results similarly to test-002-plot-growth.
-# In this case, we'll include a table of species interactions.
+#
+# In this case, we'll include a table of species interactions. Growth by groups.
 # ==============================================================================
-setwd("..")
 library("dilgrowth")
 library("tidyverse")
 # setwd("~/repos/dilgrowth/tests")
@@ -14,13 +14,13 @@ system("sh test-003-inter.sh")
 # ==============================================================================
 ## Input data
 ### ABUNTABLE: abundance table, output from BacterialCore.py
-ABUNTABLE="testdata/table_glucosa.txt"
+ABUNTABLE="../testdata/table_glucosa.txt"
 ### PCGTABLE: table with information with each PCG, output from BacterialCore.py
-PCGTABLE="testdata/pcgdata.txt"
+PCGTABLE="../testdata/pcgdata.txt"
 ### INTERTABLE: table with information about inter-species interactions
-INTERTABLE="testdata/interactions.txt"
+INTERTABLE="../testdata/interactions.txt"
 ### SAMPLENAMES: list/subset of the samples (column headers of $ABUNTABLE) we want to run simulations for
-SAMPLENAMES=c("sa1")
+SAMPLENAMES=c("sa2")
 
 ## Simulation parameters
 FIXATION_THRESHOLD="1" # relative abundance an OTU needs to have to be considered "fixed"
@@ -74,7 +74,7 @@ interactions = read.csv(file = INTERTABLE, row.names = 1, check.names = F)
 this_timestep <- as.vector(diluted_counts)
 this_timestep <- as.numeric(this_timestep)
 
-all_timesteps_log <- diluted_counts
+all_timesteps <- diluted_counts
 new_carrying_capacities <- carrying_capacities[rownames(counts) %in% names(diluted_counts)]
 
 # Check if any group has no abundance (optional step)
@@ -94,11 +94,12 @@ if (length(zero_groups) > 0) {
 }
 
 while (sum(this_timestep) < abun_total) {
+  GROW_STEP <- check_step(this_timestep, abun_total, GROW_STEP)
   this_timestep <- growth(x = this_timestep,
                           grow_step = 1,
                           carrying_capacities = new_carrying_capacities,
                           interactions = interactions)
-  all_timesteps_log <- rbind(all_timesteps_log, this_timestep)
+  all_timesteps <- rbind(all_timesteps, this_timestep)
 }
 
 # PLOT
@@ -107,9 +108,9 @@ leaf_to_pcg <- names(new_carrying_capacities)
 names(leaf_to_pcg) <- names(diluted_counts)
 
 # reshape the data into a long format
-all_timesteps_log <- data.frame(all_timesteps_log, check.names = F)
-all_timesteps_log$time <- 1:nrow(all_timesteps_log)
-df_long_log <- tidyr::gather(all_timesteps_log, key = "variable", value = "value", -time)
+all_timesteps <- data.frame(all_timesteps, check.names = F)
+all_timesteps$time <- 1:nrow(all_timesteps)
+df_long_log <- tidyr::gather(all_timesteps, key = "variable", value = "value", -time)
 
 # add a column to indicate the PCG name
 df_long_log$PCG <- leaf_to_pcg[df_long_log$variable]

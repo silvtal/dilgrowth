@@ -34,7 +34,7 @@ for (func in c('groups', 'groups_logistic', 'old')) {
   for (sample in c("sa1", "sa2")) {
     # loop through csv files and add them to the data frame
     df <- read_all_files(
-      paste0("testresults/simuls_test_", sample, "/", func, "/simul_result_X", sample, "_t_"),
+      paste0("../testresults/simuls_test_", sample, "/", func, "/simul_result_X", sample, "_t_"),
       transfers = 10
       )
     # remove transfers with NA values
@@ -44,7 +44,7 @@ for (func in c('groups', 'groups_logistic', 'old')) {
     df_long <- pivot_longer(df, -c(File), names_to = "Column", values_to = "Value")
 
     # read PCG table
-    pcg_table <- read.csv("testdata/pcgdata.txt", sep="\t")
+    pcg_table <- read.csv("../testdata/pcgdata.txt", sep="\t")
     pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
     pcg_table <- pcg_table[c("Core", "Average", "Leaves")]
 

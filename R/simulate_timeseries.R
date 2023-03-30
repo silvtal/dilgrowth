@@ -93,7 +93,6 @@ simulate_timeseries <- function (counts_data,
         size = sum(this_timestep)*dilution,
         replace = TRUE,
         prob = this_timestep))])
-
       # We do this trick to keep all species "entries", even if they're 0 after
       # diluting. It's important for being able to put all timesteps together
       # into a trajectory variable/file (keep_all_timesteps==TRUE) and for
@@ -130,6 +129,7 @@ simulate_timeseries <- function (counts_data,
       sum_by_group <- c()
       groups <- unique(names(carrying_capacities))
       for (group in groups) {
+        this_timestep[names(carrying_capacities)==group]
         sum_by_group <- c(sum_by_group, sum(this_timestep[names(carrying_capacities)==group]))
       }
       zero_groups <-  groups[sum_by_group == 0]
@@ -163,7 +163,7 @@ simulate_timeseries <- function (counts_data,
           )
         }
       } else {
-        while (sum(this_timestep) < abun_total) {
+        while (round(sum(this_timestep)) < abun_total) {
           grow_step     <- check_step(this_timestep, abun_total, grow_step)
           this_timestep <- growth(
             x = this_timestep,
