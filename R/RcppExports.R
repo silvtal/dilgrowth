@@ -22,12 +22,11 @@ pick_new_bugs <- function(arr, size, replace, prob) {
 #' The function takes four arguments:
 #' @param this_timestep A numeric vector representing the current abundance of
 #' each organism in the population.
-#' @param abun_total An integer representing the maximum total abundance that
-#' the population can reach.
 #' @param grow_step An integer representing the maximum growth rate of the
 #' population, 1 by default.
 #' @param interactions An optional numeric matrix representing the interaction
-#' between organisms in the population. This argument is set to R_NilValue by default.
+#' between organisms in the population. This argument is set to R_NilValue by
+#' default.
 #' @export
 growth_one_group <- function(this_timestep, grow_step, interactions = NULL) {
     .Call(`_dilgrowth_growth_one_group`, this_timestep, grow_step, interactions)
@@ -84,15 +83,23 @@ growth_log <- function(x, carrying_capacities, interactions = NULL) {
     .Call(`_dilgrowth_growth_log`, x, carrying_capacities, interactions)
 }
 
+#' Checks if a given grow_step is ok for running a growth() function and adjusts
+#' it accordingly if it's not (for example, not allowing for it to cause too
+#' big of a growth).
+#' @param is_grow_step_a_perc Boolean: if false, grow_step is taken as a fixed
+#' value, so the step will always be the same. If true, it is taken to indicate
+#' a percentage - the step will be changed proportionally to the community size.
+#' If grow_step is 0.02, 2% of the members in the community will grow the next
+#' iteration
 #' @export
-check_step <- function(this_timestep, abun_total, grow_step) {
-    .Call(`_dilgrowth_check_step`, this_timestep, abun_total, grow_step)
+check_step <- function(this_timestep, abun_total, grow_step, is_grow_step_a_perc = FALSE) {
+    .Call(`_dilgrowth_check_step`, this_timestep, abun_total, grow_step, is_grow_step_a_perc)
 }
 
 #' This function consists in a loop that runs growth(...)() functions as many
 #' times as needed to reach a given population size.
 #' @export
-full_growth <- function(this_timestep, grow_step, abun_total, func = "growth", interactions = NULL, carrying_capacities = NULL) {
-    .Call(`_dilgrowth_full_growth`, this_timestep, grow_step, abun_total, func, interactions, carrying_capacities)
+full_growth <- function(this_timestep, abun_total, grow_step, is_grow_step_a_perc = FALSE, func = "growth", interactions = NULL, carrying_capacities = NULL) {
+    .Call(`_dilgrowth_full_growth`, this_timestep, abun_total, grow_step, is_grow_step_a_perc, func, interactions, carrying_capacities)
 }
 

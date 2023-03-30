@@ -7,8 +7,9 @@ times as needed to reach a given population size.}
 \usage{
 full_growth(
   this_timestep,
-  grow_step,
   abun_total,
+  grow_step,
+  is_grow_step_a_perc = FALSE,
   func = "growth",
   interactions = NULL,
   carrying_capacities = NULL

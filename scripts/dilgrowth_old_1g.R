@@ -88,6 +88,9 @@ option_list <- list(
   make_option(c("--grow_step"), type = "integer",
               default = 1,
               help = "How many bugs are born on each iteration. 1 by default"),
+  make_option(c("--is_grow_step_a_perc"), type = "logical",
+              default = FALSE,
+              help = "If FALSE, grow_step is taken as a fixed value, so the step will always be the same. If TRUE, it's read as a percentage - the step will be changed proportionally to the community size. If grow_step is 0.02, 2% of the members in the community will grow the next iteration. FALSE by default"),
   make_option(c("--fix_percentage"), type = "logical",
               default = TRUE,
               help = "If TRUE, uses a fixed percentage (relative abundance, given by --perc). If FALSE, randomly chooses a percentage in each simulation. These percentages are taken from a map given by --perc_map. Default: TRUE"),
@@ -127,6 +130,10 @@ cores <- opt$cores  # e.g. 16
 
 save_all  <- opt$save_all
 grow_step <- opt$grow_step
+is_grow_step_a_perc <- opt$is_grow_step_a_perc
+if (is_grow_step_a_perc && (grow_step == 1)) {
+  message("WARNING: grow_step has been defined as a percentage of value 1. All organisms will duplicate every iteration. If you meant for grow_step to be a fixed value, set is_grow_step_a_perc to FALSE instead.")
+}
 
 dilution <-  eval(parse(text=opt$dilution)) # e.g. 8 * 10 ** (-3)
 no_of_dil <- opt$no_of_dil
@@ -206,6 +213,7 @@ if (total_counts == 0) {
                                                                    no_of_dil = no_of_dil,
                                                                    fixation_at = fixation_at,
                                                                    grow_step = grow_step,
+                                                                   is_grow_step_a_perc = is_grow_step_a_perc,
                                                                    abun_total = round(
                                                                      total_counts *
                                                                        perc),

@@ -28,6 +28,7 @@ simulate_timeseries <- function (counts_data,
                                  fixation_at=1,
                                  abun_total=NULL,
                                  grow_step=1,
+                                 is_grow_step_a_perc=FALSE,
                                  keep_all_timesteps=FALSE,
                                  force_continue=FALSE) {
   already_excluded <- c() # we'll exclude groups with total abundance of 0
@@ -116,7 +117,7 @@ simulate_timeseries <- function (counts_data,
       # Growth without groups (growth_one_group())
       # ==========================================
       while (sum(this_timestep) < abun_total) {
-        grow_step     <- check_step(this_timestep, abun_total, grow_step)
+        grow_step     <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
         this_timestep <- growth_one_group(this_timestep,
                                           grow_step,
                                           interactions)
@@ -155,7 +156,6 @@ simulate_timeseries <- function (counts_data,
       # =0.875/0.125=7. So it doesn't matter if we don't filter out zero groups)
       if (logistic) {
         while (round(sum(this_timestep)) < abun_total) { # "round" to avoid infinitesimally small differences
-          grow_step     <- check_step(this_timestep, abun_total, grow_step)
           this_timestep <- growth_log(
             x = this_timestep,
             carrying_capacities = carrying_capacities,
@@ -164,7 +164,7 @@ simulate_timeseries <- function (counts_data,
         }
       } else {
         while (round(sum(this_timestep)) < abun_total) {
-          grow_step     <- check_step(this_timestep, abun_total, grow_step)
+          grow_step     <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
           this_timestep <- growth(
             x = this_timestep,
             carrying_capacities = carrying_capacities,

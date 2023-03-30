@@ -4,6 +4,7 @@
 using namespace Rcpp;
 using namespace std;
 
+
 // [[Rcpp::depends(RcppArmadillo)]]
 //' Sampling function for growth_one_group(), growth()
 //' @param arr is a vector of positions. If the abundance vector of interest has
@@ -11,7 +12,7 @@ using namespace std;
 //' @export
 // [[Rcpp::export]]
 NumericVector pick_new_bugs(NumericVector arr,
-                            double size,
+                            int size,
                             bool replace,
                             NumericVector prob) {
   NumericVector pos = RcppArmadillo::sample(arr, size, replace, prob);
@@ -31,16 +32,15 @@ NumericVector pick_new_bugs(NumericVector arr,
 //' The function takes four arguments:
 //' @param this_timestep A numeric vector representing the current abundance of
 //' each organism in the population.
-//' @param abun_total An integer representing the maximum total abundance that
-//' the population can reach.
 //' @param grow_step An integer representing the maximum growth rate of the
 //' population, 1 by default.
 //' @param interactions An optional numeric matrix representing the interaction
-//' between organisms in the population. This argument is set to R_NilValue by default.
+//' between organisms in the population. This argument is set to R_NilValue by
+//' default.
 //' @export
 // [[Rcpp::export]]
 NumericVector growth_one_group(NumericVector this_timestep,
-                               int grow_step,
+                               double grow_step,
                                Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue) {
 
   // We will sample the growth positions from here
@@ -58,6 +58,7 @@ NumericVector growth_one_group(NumericVector this_timestep,
       }
     }
   }
+
 
   // Grow (loop: as many times as "step" indicates)
   NumericVector new_bugs = pick_new_bugs(arr, grow_step, FALSE, prob);
@@ -231,25 +232,43 @@ NumericVector growth_log(NumericVector x,
 }
 
 
+//' Checks if a given grow_step is ok for running a growth() function and adjusts
+//' it accordingly if it's not (for example, not allowing for it to cause too
+//' big of a growth).
+//' @param is_grow_step_a_perc Boolean: if false, grow_step is taken as a fixed
+//' value, so the step will always be the same. If true, it is taken to indicate
+//' a percentage - the step will be changed proportionally to the community size.
+//' If grow_step is 0.02, 2% of the members in the community will grow the next
+//' iteration
 //' @export
 // [[Rcpp::export]]
 int check_step(NumericVector this_timestep,
                int abun_total,
-               int grow_step) {
-  // Choose "step" (this is why we need "abun_total")
-  int step;
-  if (trunc((sum(this_timestep)) + grow_step) > abun_total) { // trunc: this_timestep might not have whole numbers.
-    // Avoid growing too much (when step>1)
-    step = (abun_total - sum(this_timestep));
+               double grow_step,
+               bool is_grow_step_a_perc = false) {
 
-  } else if (sum(this_timestep) < grow_step) {
-    // Ensure it is not too big of a step
-    int half = trunc(sum(this_timestep)/2);
-    step = std::max(half, 1);
+  int step;
+  if (is_grow_step_a_perc) {
+    // Apply a percentage first if necessary
+    if ((grow_step > 1) || (grow_step < 0)) {
+      Rf_error("If grow_step is a percentage, it has to be a value between 0 (0% of the members of the community will grow) and 1 (100% of members will grow, the total abundance will duplicate every iteration).");
+    } else {
+      step = trunc(grow_step * sum(this_timestep));
+    }
+
+    // Check magnitude of step
+    if (trunc((sum(this_timestep)) + grow_step) > abun_total) { // trunc: this_timestep might not have whole numbers.
+      // Avoid growing too much (when step>1)
+      step = (abun_total - sum(this_timestep));
+    } else if (sum(this_timestep) < grow_step) {
+      // Ensure there are enough bugs to grow with that step
+      int half = trunc(sum(this_timestep)/2);
+      step = std::max(half, 1);
 
   } else {
     // If grow_step is OK
     step = grow_step;
+  }
   }
   return(step);
 }
@@ -260,26 +279,26 @@ int check_step(NumericVector this_timestep,
 //' @export
 // [[Rcpp::export]]
 NumericVector full_growth(NumericVector this_timestep,
-                          int grow_step,
                           int abun_total,
+                          int grow_step,
+                          bool is_grow_step_a_perc = false,
                           String func = "growth",
                           Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue,
                           Rcpp::Nullable<Rcpp::NumericVector> carrying_capacities = R_NilValue) {
   if (func == "growth_one_group") {
     while (sum(this_timestep) < abun_total) {
-      grow_step = check_step(this_timestep, abun_total, grow_step);
+      grow_step = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
       this_timestep = growth_one_group(this_timestep, grow_step, interactions.get());
     }
   } else if (func == "growth" && carrying_capacities.isNotNull()) {
     while (sum(this_timestep) < abun_total) {
-      grow_step = check_step(this_timestep, abun_total, grow_step);
+      grow_step = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
       this_timestep = growth(this_timestep, carrying_capacities.get(), grow_step, interactions.get());
     }
   } else if (func == "growth_log" && carrying_capacities.isNotNull()) {
     while (round(sum(this_timestep)) < abun_total) {
-      grow_step = check_step(this_timestep, abun_total, grow_step);
       this_timestep = growth_log(this_timestep, carrying_capacities.get(), interactions.get());
     }
-    return(this_timestep);
   }
+  return(this_timestep);
 }

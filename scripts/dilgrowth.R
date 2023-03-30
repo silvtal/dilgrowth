@@ -107,9 +107,12 @@ option_list <- list(
   make_option(c("--save_all"), type = "logical",
               default = FALSE,
               help = "save all intermediate states of the simulations? default FALSE"),
-  make_option(c("--grow_step"), type = "integer",
+  make_option(c("--grow_step"), type = "double",
               default = 1,
               help = "How many bugs are born on each iteration. 1 by default"),
+  make_option(c("--is_grow_step_a_perc"), type = "logical",
+              default = FALSE,
+              help = "If FALSE, grow_step is taken as a fixed value, so the step will always be the same. If TRUE, it's read as a percentage - the step will be changed proportionally to the community size. If grow_step is 0.02, 2% of the members in the community will grow the next iteration. FALSE by default"),
   make_option(c("--logistic"), type = "logical",
               default = FALSE,
               help = "¿Should growth be logistic? If TRUE, the grow_step/growth rate of each species will change over the course of the simulation, in a logistic growth manner (see growth_log)."),
@@ -145,6 +148,11 @@ cores <- opt$cores  # e.g. 16
 
 save_all  <- opt$save_all
 grow_step <- opt$grow_step
+is_grow_step_a_perc <- opt$is_grow_step_a_perc
+if (is_grow_step_a_perc && (grow_step == 1)) {
+  message("WARNING: grow_step has been defined as a percentage of value 1. All organisms will duplicate every iteration. If you meant for grow_step to be a fixed value, set is_grow_step_a_perc to FALSE instead.")
+}
+
 logistic <- opt$logistic
 
 dilution <-  eval(parse(text=opt$dilution)) # e.g. 8 * 10 ** (-3)
@@ -237,6 +245,7 @@ if (abun_total == 0) {
                                                              no_of_dil = no_of_dil,
                                                              fixation_at = fixation_at,
                                                              grow_step = grow_step,
+                                                             is_grow_step_a_perc = is_grow_step_a_perc,
                                                              keep_all_timesteps = save_all)
                            print(paste("Simulation", iter, "finished for", s))
                            return(trajectory)

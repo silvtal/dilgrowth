@@ -16,6 +16,7 @@ simulate_timeseries(
   fixation_at = 1,
   abun_total = NULL,
   grow_step = 1,
+  is_grow_step_a_perc = FALSE,
   keep_all_timesteps = FALSE,
   force_continue = FALSE
 )

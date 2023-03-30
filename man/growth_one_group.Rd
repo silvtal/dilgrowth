@@ -24,10 +24,8 @@ each organism in the population.}
 population, 1 by default.}
 
 \item{interactions}{An optional numeric matrix representing the interaction
-between organisms in the population. This argument is set to R_NilValue by default.}
-
-\item{abun_total}{An integer representing the maximum total abundance that
-the population can reach.}
+between organisms in the population. This argument is set to R_NilValue by
+default.}
 }
 \description{
 This Rcpp function simulates the growth of a population of organisms over a
