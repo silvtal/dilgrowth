@@ -247,7 +247,7 @@ int check_step(NumericVector this_timestep,
                double grow_step,
                bool is_grow_step_a_perc = false) {
 
-  int step;
+  int step = grow_step;
   if (is_grow_step_a_perc) {
     // Apply a percentage first if necessary
     if ((grow_step > 1) || (grow_step < 0)) {
@@ -256,20 +256,16 @@ int check_step(NumericVector this_timestep,
       step = trunc(grow_step * sum(this_timestep));
       step = max(1, step); // never less than 1 !!
     }
-
-    // Check magnitude of step
-    if (trunc((sum(this_timestep)) + grow_step) > abun_total) { // trunc: this_timestep might not have whole numbers.
-      // Avoid growing too much (when step>1)
-      step = (abun_total - sum(this_timestep));
-    } else if (sum(this_timestep) < grow_step) {
-      // Ensure there are enough bugs to grow with that step
-      int half = trunc(sum(this_timestep)/2);
-      step = std::max(half, 1);
-
-  } else {
-    // If grow_step is OK
-    step = grow_step;
   }
+
+  // Check magnitude of step
+  if (trunc((sum(this_timestep)) + grow_step) > abun_total) { // trunc: this_timestep might not have whole numbers.
+    // Avoid growing too much (when step>1)
+    step = (abun_total - sum(this_timestep));
+  } else if (sum(this_timestep) < grow_step) {
+    // Ensure there are enough bugs to grow with that step
+    int half = trunc(sum(this_timestep)/2);
+    step = std::max(half, 1);
   }
   return(step);
 }

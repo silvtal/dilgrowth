@@ -208,7 +208,7 @@ if (total_counts == 0) {
                                  colnames(trajectory) <- names(start)
                                  trajectory["0",]=start
                                } else {
-                                 trajectory <- simulate_timeseries(counts,
+                                 trajectory <- simulate_timeseries(counts_data = counts,
                                                                    dilution = dilution,
                                                                    no_of_dil = no_of_dil,
                                                                    fixation_at = fixation_at,
