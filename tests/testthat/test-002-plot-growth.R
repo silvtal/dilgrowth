@@ -2,6 +2,8 @@
 # This test plots a growth cycle, iteration by iteration, to compare logistic
 # and non-logistic growth
 # ==============================================================================
+pdf("../testresults/test-002.pdf")
+
 library("dilgrowth")
 library("tidyverse")
 # setwd("~/repos/dilgrowth/tests")
@@ -141,3 +143,5 @@ q <- ggplot(df_long_log, aes(x = time, y = value, group = variable, color = PCG)
   geom_line() +
   labs(x = "Time", y = "value", title = "logistic")
 print(q)
+
+dev.off()

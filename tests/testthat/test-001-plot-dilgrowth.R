@@ -6,6 +6,7 @@
 # "new" plot --> logistic growth, each group has a different carrying capacity
 #                as specified in the PCG table
 # ==============================================================================
+pdf("../testresults/test-001.pdf")
 
 # load required packages
 library(dplyr)
@@ -67,6 +68,9 @@ for (func in c('groups', 'groups_logistic', 'old')) {
     print(p)
 
     # show fixed OTUs
+    print(paste0("fixed otus in func ", func, " sample ", sample, ":"))
     print(sort(df_long$Value[df_long$File==max(df_long$File)], decreasing = TRUE)[1:3])
   }
 }
+
+dev.off()

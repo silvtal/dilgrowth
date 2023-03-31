@@ -1,12 +1,15 @@
 # ==============================================================================
 # This test creates simulation data similarly to test-000, with growth over 10
 # transfers. Also plots the results similarly to test-002-plot-growth.
-#
-# In this case, we'll include a table of species interactions. Growth by groups.
+# In this case, we'll include a table of species interactions. We also compare
+# with a percentage grow_step.
 # ==============================================================================
+# setwd("..")
+setwd("~/repos/dilgrowth/tests")
+pdf("testresults/test-003.pdf")
+
 library("dilgrowth")
 library("tidyverse")
-# setwd("~/repos/dilgrowth/tests")
 
 # run simuls
 system("sh test-003-inter.sh")
@@ -14,18 +17,19 @@ system("sh test-003-inter.sh")
 # ==============================================================================
 ## Input data
 ### ABUNTABLE: abundance table, output from BacterialCore.py
-ABUNTABLE="../testdata/table_glucosa.txt"
+ABUNTABLE="testdata/table_glucosa.txt"
 ### PCGTABLE: table with information with each PCG, output from BacterialCore.py
-PCGTABLE="../testdata/pcgdata.txt"
+PCGTABLE="testdata/pcgdata.txt"
 ### INTERTABLE: table with information about inter-species interactions
-INTERTABLE="../testdata/interactions.txt"
+INTERTABLE="testdata/interactions.txt"
 ### SAMPLENAMES: list/subset of the samples (column headers of $ABUNTABLE) we want to run simulations for
-SAMPLENAMES=c("sa2")
+SAMPLENAMES=c("sa1")
 
 ## Simulation parameters
 FIXATION_THRESHOLD="1" # relative abundance an OTU needs to have to be considered "fixed"
 DILUTION=0.1
 GROW_STEP=1
+GD_PERC=FALSE
 
 # ==============================================================================
 # read abundance table
@@ -69,13 +73,15 @@ for (group in 1:nrow(pcg_table)) {
 interactions = read.csv(file = INTERTABLE, row.names = 1, check.names = F)
 
 # ==============================================================================
-# GROUPS, NON-LOGISTIC
+# GROUPS, NON-LOGISTIC, INTERACTIONS
 
 this_timestep <- as.vector(diluted_counts)
 this_timestep <- as.numeric(this_timestep)
 
 all_timesteps <- diluted_counts
 new_carrying_capacities <- carrying_capacities[rownames(counts) %in% names(diluted_counts)]
+new_interactions <- interactions[rownames(counts) %in% names(diluted_counts),
+                                 rownames(counts) %in% names(diluted_counts)]
 
 # Check if any group has no abundance (optional step)
 sum_by_group <- c()
@@ -94,11 +100,11 @@ if (length(zero_groups) > 0) {
 }
 
 while (sum(this_timestep) < abun_total) {
-  GROW_STEP <- check_step(this_timestep, abun_total, GROW_STEP)
+  step          <- check_step(this_timestep, abun_total, GROW_STEP, GD_PERC)
   this_timestep <- growth(x = this_timestep,
-                          grow_step = 1,
+                          grow_step = step,
                           carrying_capacities = new_carrying_capacities,
-                          interactions = interactions)
+                          interactions = as.matrix(new_interactions))
   all_timesteps <- rbind(all_timesteps, this_timestep)
 }
 
@@ -119,5 +125,67 @@ df_long_log$PCG[is.na(df_long_log$PCG)] <- "others"
 # create plot
 p <- ggplot(df_long_log, aes(x = time, y = value, group = variable, color = PCG)) +
   geom_line() +
-  labs(x = "Time", y = "value", title = "logistic")
+  labs(x = "Time", y = "value", title = "with interactions")
 print(p)
+
+
+# ==============================================================================
+# GROUPS, NON-LOGISTIC, INTERACTIONS, GROW_STEP 1%
+
+GROW_STEP <- 0.01
+GD_PERC <- TRUE
+
+this_timestep <- as.vector(diluted_counts)
+this_timestep <- as.numeric(this_timestep)
+
+all_timesteps <- diluted_counts
+new_carrying_capacities <- carrying_capacities[rownames(counts) %in% names(diluted_counts)]
+new_interactions <- interactions[rownames(counts) %in% names(diluted_counts),
+                                 rownames(counts) %in% names(diluted_counts)]
+
+# Check if any group has no abundance (optional step)
+sum_by_group <- c()
+groups <- unique(names(carrying_capacities))
+for (group in groups) {
+  sum_by_group <- c(sum_by_group, sum(.my_transpose(counts)[names(carrying_capacities)==group]))
+}
+zero_groups <-  groups[!(groups %in% unique(names(new_carrying_capacities)))]
+
+# If there are zero groups, redefine abun_total
+if (length(zero_groups) > 0) {
+  for (zg in zero_groups) {
+    abun_total <- abun_total - carrying_capacities[zg]
+    message(paste0("WARNING: The following group has no abundance and was excluded: ", zg, ". Adjusting abun_total to ", abun_total, " accordingly."))
+  }
+}
+
+while (sum(this_timestep) < abun_total) {
+  step          <- check_step(this_timestep, abun_total, GROW_STEP, GD_PERC)
+  this_timestep <- growth(x = this_timestep,
+                          grow_step = step,
+                          carrying_capacities = new_carrying_capacities,
+                          interactions = as.matrix(new_interactions))
+  all_timesteps <- rbind(all_timesteps, this_timestep)
+}
+
+# PLOT
+
+leaf_to_pcg <- names(new_carrying_capacities)
+names(leaf_to_pcg) <- names(diluted_counts)
+
+# reshape the data into a long format
+all_timesteps <- data.frame(all_timesteps, check.names = F)
+all_timesteps$time <- 1:nrow(all_timesteps)
+df_long_log <- tidyr::gather(all_timesteps, key = "variable", value = "value", -time)
+
+# add a column to indicate the PCG name
+df_long_log$PCG <- leaf_to_pcg[df_long_log$variable]
+df_long_log$PCG[is.na(df_long_log$PCG)] <- "others"
+
+# create plot
+p <- ggplot(df_long_log, aes(x = time, y = value, group = variable, color = PCG)) +
+  geom_line() +
+  labs(x = "Time", y = "value", title = "with interactions and 1%growth")
+print(p)
+
+dev.off()

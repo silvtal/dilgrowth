@@ -117,9 +117,9 @@ simulate_timeseries <- function (counts_data,
       # Growth without groups (growth_one_group())
       # ==========================================
       while (sum(this_timestep) < abun_total) {
-        grow_step     <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
+        step          <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
         this_timestep <- growth_one_group(this_timestep,
-                                          grow_step,
+                                          step,
                                           interactions)
       }
     } else {
@@ -164,11 +164,11 @@ simulate_timeseries <- function (counts_data,
         }
       } else {
         while (round(sum(this_timestep)) < abun_total) {
-          grow_step     <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
+          step          <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
           this_timestep <- growth(
             x = this_timestep,
             carrying_capacities = carrying_capacities,
-            grow_step = grow_step,
+            grow_step = step,
             interactions = interactions
           )
         }

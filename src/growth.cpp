@@ -61,7 +61,7 @@ NumericVector growth_one_group(NumericVector this_timestep,
 
 
   // Grow (loop: as many times as "step" indicates)
-  NumericVector new_bugs = pick_new_bugs(arr, grow_step, FALSE, prob);
+  NumericVector new_bugs = pick_new_bugs(arr, grow_step, TRUE, prob);
   int bug;
   for (std::size_t i = 0; i < new_bugs.size(); i++) {
     bug = new_bugs[i];
@@ -132,19 +132,27 @@ NumericVector growth(NumericVector x,
       g[i] = (names[i] == group);
     }
    // (only bugs from this group can grow)
+   // (also check magnitude of grow_step)
     NumericVector group_prob(size);
+    double sum_group = 0;
     for (int i = 0; i < size; i++) {
       if (g[i]) {
         group_prob[i] = prob[i];
+        sum_group += x[i];
       } else {
         group_prob[i] = 0;
       }
     }
+    sum_group = trunc(sum_group);
+    int step = min(static_cast<int>(grow_step), static_cast<int>(sum_group)); // TODO
+
     // Stop if no one can grow in this group
     if (sum(group_prob)==0) {
       continue;
     }
-    NumericVector new_bugs = pick_new_bugs(arr, grow_step, FALSE, group_prob);
+
+    // Grow
+    NumericVector new_bugs = pick_new_bugs(arr, step, TRUE, group_prob);
     int bug;
     for (int i = 0; i < new_bugs.size(); i++) {  // grow_step times
       bug = new_bugs[i];
@@ -284,13 +292,13 @@ NumericVector full_growth(NumericVector this_timestep,
                           Rcpp::Nullable<Rcpp::NumericVector> carrying_capacities = R_NilValue) {
   if (func == "growth_one_group") {
     while (sum(this_timestep) < abun_total) {
-      grow_step = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
-      this_timestep = growth_one_group(this_timestep, grow_step, interactions.get());
+      int step      = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
+      this_timestep = growth_one_group(this_timestep, step, interactions.get());
     }
   } else if (func == "growth" && carrying_capacities.isNotNull()) {
     while (sum(this_timestep) < abun_total) {
-      grow_step = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
-      this_timestep = growth(this_timestep, carrying_capacities.get(), grow_step, interactions.get());
+      int step      = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
+      this_timestep = growth(this_timestep, carrying_capacities.get(), step, interactions.get());
     }
   } else if (func == "growth_log" && carrying_capacities.isNotNull()) {
     while (round(sum(this_timestep)) < abun_total) {
