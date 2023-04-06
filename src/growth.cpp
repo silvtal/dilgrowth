@@ -61,7 +61,7 @@ NumericVector growth_one_group(NumericVector this_timestep,
 
 
   // Grow (loop: as many times as "step" indicates)
-  NumericVector new_bugs = pick_new_bugs(arr, grow_step, TRUE, prob);
+  NumericVector new_bugs = pick_new_bugs(arr, grow_step, true, prob);
   int bug;
   for (std::size_t i = 0; i < new_bugs.size(); i++) {
     bug = new_bugs[i];
@@ -152,7 +152,7 @@ NumericVector growth(NumericVector x,
     }
 
     // Grow
-    NumericVector new_bugs = pick_new_bugs(arr, step, TRUE, group_prob);
+    NumericVector new_bugs = pick_new_bugs(arr, step, true, group_prob);
     int bug;
     for (int i = 0; i < new_bugs.size(); i++) {  // grow_step times
       bug = new_bugs[i];
