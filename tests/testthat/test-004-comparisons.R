@@ -8,6 +8,8 @@
 library("dilgrowth")
 library("tidyverse")
 library("patchwork")
+library("grid")
+library("gridExtra")
 
 # ==============================================================================
 ## Simulation parameters

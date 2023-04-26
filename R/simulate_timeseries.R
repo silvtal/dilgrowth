@@ -64,8 +64,25 @@ simulate_timeseries <- function (counts_data,
 
   this_timestep <- start
   dil <- 0
-  while (dil < no_of_dil &
-         (max(this_timestep)/sum(this_timestep) < fixation_at)){
+
+  # When checking for fixation, if there are multiple groups we must check for 
+  # fixation in each group separately
+  if (is.null(carrying_capacities)) {
+    fixation_check <- max(this_timestep)/sum(this_timestep) < fixation_at
+  } else {
+    df <- data.frame(carrying_capacities, as.numeric(this_timestep))
+    total_abundances <- aggregate(abundances ~ groups, df, sum)
+    df <- merge(df, total_abundances, by = "groups")
+    max_abundances <- aggregate(abundances ~ groups, df, max)
+    # Check if any element in the groups vector surpasses 50% of the within-group total abundance
+    if (any(max_abundances$abundances/total_abundances$abundances >= 0.5)) {
+      fixation_check <- FALSE
+    } else {
+      fixation_check <- TRUE
+    }
+  }
+
+  while ((dil < no_of_dil) & fixation_check) {
     ## CASE 1 -- All taxa extinct or almost
     if (trunc(sum(this_timestep)*dilution)==0) {
       if (force_continue) {
@@ -184,11 +201,14 @@ simulate_timeseries <- function (counts_data,
       # pero si keep_all(...), antes "secuenciamos" (guardamos las abundancias)
       trajectory[as.character(dil),] <- this_timestep
     }
-  }
-  if (max(this_timestep)/sum(this_timestep) >= fixation_at) {
+  } 
+ 
+  # If the loop has stopped because of premature fixation
+  if (fixation_check == FALSE) {
     write(paste0(fixation_at*100, "% fixation of ",
                  ns[this_timestep!=0], " after ", dil, " dilutions."), stdout())
   }
+
   if (keep_all_timesteps){
     return(trajectory)
   } else {

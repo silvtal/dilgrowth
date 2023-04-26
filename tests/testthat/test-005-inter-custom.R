@@ -4,72 +4,69 @@
 # In this case, we'll include a table of species interactions. We also compare
 # with a percentage grow_step.
 # ==============================================================================
-pdf("../testresults/test-003.pdf", width = 8.5)
-
 library("dilgrowth")
 library("tidyverse")
+library("grid")
 library("gridExtra")
+library("patchwork")
 
 # run simuls
 
 # ==============================================================================
-## Input data
-### ABUNTABLE: abundance table, output from BacterialCore.py
-ABUNTABLE="../testdata/table_glucosa.txt"
-### PCGTABLE: table with information with each PCG, output from BacterialCore.py
-PCGTABLE="../testdata/pcgdata.txt"
-### INTERTABLE: table with information about inter-species interactions
-INTERTABLE="../testdata/interactions.txt"
-### SAMPLENAMES: list/subset of the samples (column headers of $ABUNTABLE) we want to run simulations for
-SAMPLENAMES=c("sa1")
+## Input data (custom)
+my_sample <- data.frame('otu1' = 3000,
+                        'otu2' = 3000,
+                        'otu3' = 1000,
+
+                        'otu4' = 4000,
+                        'otu5' = 4000,
+                        'otu6' = 2000,
+                        'otu7' = 500 )/10
+carrying_capacities <- c('gr_1' = 7000,
+                         'gr_1' = 7000,
+                         'gr_1' = 7000,
+
+                         'gr_2' = 10500,
+                         'gr_2' = 10500,
+                         'gr_2' = 10500,
+                         'gr_2' = 10500)/10
+my_colors <- c("otu1" = "#009900",
+               "otu2" = "#466D1D",
+               "otu3" = "#66FF66",
+
+               "otu4" = "#B80F0A",
+               "otu5" = "#FF0000",
+               "otu6" = "#FF6666",
+               "otu7" = "darkred")
+# total final community size
+abun_total <- sum(my_sample)
+# set interactions
+no_interactions <- data.frame(matrix(0,
+                                  nrow = 7,
+                                  ncol = 7),
+                           row.names = names(my_sample))
+colnames(no_interactions) <- names(my_sample)
+my_interactions <- no_interactions
+# - [intergroup] otu1 grows worse in the presence of otu4
+# - [intergroup] otu4 grows more in the presence of otu1
+# - [intragroup] otu6 and otu7 help each other
+my_interactions["otu1", "otu4"] <- -1
+my_interactions["otu4", "otu1"] <- +1
+my_interactions["otu6", "otu7"] <- +1
+my_interactions["otu7", "otu6"] <- +1
 
 ## Simulation parameters
 FIXATION_THRESHOLD="1" # relative abundance an OTU needs to have to be considered "fixed"
 DILUTION=0.1
-GROW_STEP=1
-GD_PERC=FALSE
 
-# ==============================================================================
-# read abundance table
-exp <- read.csv(
-  ABUNTABLE,
-  sep = "\t",
-  skip = 1,
-  row.names = 1,
-  check.names = FALSE
-)
-exp <- exp[colnames(exp) != "taxonomy"] # remove taxonomy column if present
-colnames(exp) <- as.character(colnames(exp)) # in case sample names are numbers
-counts <- exp[SAMPLENAMES]
-abun_total <- sum(counts)
+abun_total <- sum(my_sample)
 
 # dilute
-diluted_counts <- .my_transpose(counts)
-diluted_counts <- table(names(diluted_counts)[.Internal(sample(
-  x = length(diluted_counts),
-  size = sum(diluted_counts)*DILUTION,
+diluted_counts <- table(names(my_sample)[.Internal(sample(
+  x = length(my_sample),
+  size = sum(my_sample)*DILUTION,
   replace = TRUE,
-  prob = diluted_counts))])
-
-# parse PCG table if everything's OK
-pcg_table <- read.csv(PCGTABLE, sep="\t")
-pcg_table <- pcg_table[1:(nrow(pcg_table)-1),] # remove last row (general info, not core info)
-pcg_table <- pcg_table[c("Core", "Average", "Leaves")]
-pcg_table$Average <- as.numeric(pcg_table$Average)
-
-# carrying capacities for each PCG
-abun_others <- abun_total * (1 - sum(pcg_table$Average))
-carrying_capacities <- rep(round(abun_others), nrow(counts))
-names(carrying_capacities) <- rep("others", nrow(counts))
-for (group in 1:nrow(pcg_table)) {
-  leaves <- strsplit(pcg_table$Leaves[group], ";")[[1]]
-  names(carrying_capacities)[rownames(counts) %in% leaves] <- pcg_table$Core[group]
-  carrying_capacities[rownames(counts) %in% leaves]        <- (pcg_table$Average[group] * abun_total) %>% round
-}
-
-# parse interactions table
-interactions = read.csv(file = INTERTABLE, row.names = 1, check.names = F)
-
+  prob = my_sample))])
 
 # ==============================================================================
 # PLOT 4 PLOTS
@@ -77,35 +74,38 @@ plot_list <- list()
 
 for (i in 1:2) {
 
-  if (i == 1) {
+  if (i == 2) {
     # with INTERACTIONS
     # ----------------------------------------------------------------------------
     # parse interactions table
-    interactions = read.csv(file = INTERTABLE, row.names = 1, check.names = F)
-    title = "with interactions"
+    interactions <- my_interactions
+    title <- "with interactions"
   } else {
     # without INTERACTIONS
     # ----------------------------------------------------------------------------
-    interactions[interactions != 0] <- 0
+    interactions <- no_interactions
     title = "NO interactions"
   }
 
   # ==============================================================================
   # GROUPS, NON-LOGISTIC
 
+  GROW_STEP=1
+  GD_PERC=FALSE
+
   this_timestep <- as.vector(diluted_counts)
   this_timestep <- as.numeric(this_timestep)
 
   all_timesteps <- diluted_counts
-  new_carrying_capacities <- carrying_capacities[rownames(counts) %in% names(diluted_counts)]
-  new_interactions <- interactions[rownames(counts) %in% names(diluted_counts),
-                                   rownames(counts) %in% names(diluted_counts)]
+  new_carrying_capacities <- carrying_capacities[names(my_sample) %in% names(diluted_counts)]
+  new_interactions <- interactions[names(my_sample) %in% names(diluted_counts),
+                                   names(my_sample) %in% names(diluted_counts)]
 
   # Check if any group has no abundance (optional step)
   sum_by_group <- c()
   groups <- unique(names(carrying_capacities))
   for (group in groups) {
-    sum_by_group <- c(sum_by_group, sum(.my_transpose(counts)[names(carrying_capacities)==group]))
+    sum_by_group <- c(sum_by_group, sum(my_sample[names(carrying_capacities)==group]))
   }
   zero_groups <-  groups[!(groups %in% unique(names(new_carrying_capacities)))]
 
@@ -128,25 +128,26 @@ for (i in 1:2) {
 
   # PLOT
 
-  leaf_to_pcg <- names(new_carrying_capacities)
-  names(leaf_to_pcg) <- names(diluted_counts)
-
   # reshape the data into a long format
   all_timesteps <- data.frame(all_timesteps, check.names = F)
   all_timesteps$time <- 1:nrow(all_timesteps)
   df_long <- tidyr::gather(all_timesteps, key = "variable", value = "value", -time)
 
   # add a column to indicate the PCG name
+  leaf_to_pcg <- names(carrying_capacities)
+  names(leaf_to_pcg) <- names(diluted_counts)
+
   df_long$PCG <- leaf_to_pcg[df_long$variable]
-  df_long$PCG[is.na(df_long$PCG)] <- "others"
 
   # create plot
-  plot_list[[i]] <- ggplot(df_long, aes(x = time, y = value, group = variable, color = PCG)) +
+  plot_list[[i]] <- ggplot(df_long, aes(x = time, y = value, group = variable, linetype = PCG, color = variable)) +
     geom_line() +
     labs(x = "Time", y = "value", title = title) +
     geom_text(data = subset(df_long, time == max(time)),
-              aes(label = variable, color = PCG),
-              nudge_x = 40, nudge_y = 40, size = 2)
+    aes(label = variable, color = variable),
+    nudge_x = 40, nudge_y = 40, size = 3) +
+    scale_linetype_manual(values = c("solid", "dotted")) +
+    scale_color_manual(values = my_colors)
 
   # plot_list[[i]] <- ggplot(df_long, aes(x = time, y = value, group = variable, color = PCG)) +
   #   geom_line() +
@@ -164,15 +165,15 @@ for (i in 1:2) {
   this_timestep <- as.numeric(this_timestep)
 
   all_timesteps <- diluted_counts
-  new_carrying_capacities <- carrying_capacities[rownames(counts) %in% names(diluted_counts)]
-  new_interactions <- interactions[rownames(counts) %in% names(diluted_counts),
-                                   rownames(counts) %in% names(diluted_counts)]
+  new_carrying_capacities <- carrying_capacities[names(my_sample) %in% names(diluted_counts)]
+  new_interactions <- interactions[names(my_sample) %in% names(diluted_counts),
+                                   names(my_sample) %in% names(diluted_counts)]
 
   # Check if any group has no abundance (optional step)
   sum_by_group <- c()
   groups <- unique(names(carrying_capacities))
   for (group in groups) {
-    sum_by_group <- c(sum_by_group, sum(.my_transpose(counts)[names(carrying_capacities)==group]))
+    sum_by_group <- c(sum_by_group, sum(my_sample[names(carrying_capacities)==group]))
   }
   zero_groups <-  groups[!(groups %in% unique(names(new_carrying_capacities)))]
 
@@ -205,19 +206,39 @@ for (i in 1:2) {
 
   # add a column to indicate the PCG name
   df_long$PCG <- leaf_to_pcg[df_long$variable]
-  df_long$PCG[is.na(df_long$PCG)] <- "others"
 
   # create plot
-  plot_list[[i+2]] <- ggplot(df_long, aes(x = time, y = value, group = variable, color = PCG)) +
+  plot_list[[i+2]] <- ggplot(df_long, aes(x = time, y = value, group = variable, linetype = PCG, color = variable)) +
     geom_line() +
     labs(x = "Time", y = "value", title = paste(title, "and 1%growth")) +
     geom_text(data = subset(df_long, time == max(time)),
-              aes(label = variable, color = PCG),
-              nudge_x = 40, nudge_y = 40, size = 2)
+              aes(label = variable, color = variable),
+              nudge_x = 40, nudge_y = 40, size = 3) +
+    scale_linetype_manual(values = c("solid", "dotted")) +
+    scale_color_manual(values = my_colors)
 }
-grid.arrange(
-  grobs = plot_list,
-  ncol = 2
+
+design_panel <- "
+  11111112222222
+  11111112222222
+  11111112222222
+  33333334444444
+  33333334444444
+  33333334444444
+  55555555555555
+"
+pdf("../testresults/test-005.pdf", width = 8.5)
+
+plot_list[[5]] <- textGrob("Interactions are like follows:
+- [intergroup] otu1 grows worse in the presence of otu4
+- [intergroup] otu4 grows more in the presence of otu1
+- [intragroup] otu6 and otu7 help each other", hjust = 0, gp =  gpar(fontsize = 8))
+
+print(
+  wrap_plots(
+    grobs = plot_list,
+    ncol = 2
+  ) + plot_layout(design = design_panel)
 )
 
 dev.off()
