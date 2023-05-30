@@ -18,8 +18,6 @@ Rcpp, RcppArmadillo, data.table, gsubfn, magrittr, tidyr, untb, utils, stats
 ## Scripts
 - `dilgrowth.R`: This script runs dilution-growth simulations in parallel for all functional groups specified in a file with information of each PCG (its leaves and final relative abundances, BacterialCore.py output). It also needs an abundance table from which a single column (sample) will be chosen as initial abudance data for the simulation. In each iteration of the growth simulations, growth of each bug will be logistic and depend on the carrying-capacity of its functional growth. This growth is also stochastic and simulates intra-group drift.
 
-- `dilgrowth_old_1g.R`: This old version simulates non-logistic, lineal growth for each functional group separately, creating separate files. It needs the initial abundances from one sample (a matrix column from an abundance table) and an index or list of OTUs (corresponding to a group; `results.txt` file from [BacterialCore.py](https://github.com/silvtal/BacterialCore)). Also simulates the changes in relative abundances over a series of dilution-transfer cycles.
-
 - `wrapper.sh`: Just a wrapper we use in our cluster. It launches `dilgrowth_old_1g.R` for different samples of an abundance table. Needs the `results.txt` PCG table + a `table.from.biom`-like abundance table. For each initial sample, a folder is generated that contains simulations _for each PCG separately_. Each PCG will reach the relative abundance that was specified on the PCG table.
 
 
