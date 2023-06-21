@@ -24,8 +24,6 @@ create_counts(
 
 \item{m_inic}{Vector of samples to pick (by sample name)}
 
-\item{allow_empty_transfers}{}
-
 \item{select_transfers}{Vector of transfers to pick from the abundance table}
 
 \item{orig}{Original sample tag column name in map}

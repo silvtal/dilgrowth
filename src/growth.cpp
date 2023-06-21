@@ -19,21 +19,19 @@ NumericVector pick_new_bugs(NumericVector arr,
   return (pos);
 }
 
-//' This Rcpp function simulates the growth of a population of organisms over a
-//' specified time step. It takes the current population abundance, the maximum
-//' growth rate, and the maximum total abundance as inputs, and returns an
-//' updated abundance vector that reflects the growth of the population. The
-//' function calculates the growth rate based on the current population
-//' abundance and the maximum possible total abundance, and calculates
-//' the probability of growth for each organism in the population based on their
-//' current abundance and any specified interactions between organisms. The
+//' This Rcpp function simulates the growth of a community of organisms over a
+//' specified time step. It takes the current community abundances, a fixed
+//' growth step, and an optional interactions matrix as inputs, and returns
+//' an updated abundances vector that reflects the growth of the community. The
+//' function calculates the probability of growth for each organism based on
+//' their current abundance and any specified interactions between organisms. The
 //' function then randomly selects organisms to grow based on these probabilities
 //' and increases their abundance by grow_step (1 by default).
 //' The function takes four arguments:
 //' @param this_timestep A numeric vector representing the current abundance of
 //' each organism in the population.
-//' @param grow_step An integer representing the maximum growth rate of the
-//' population, 1 by default.
+//' @param grow_step An integer representing the growth step for organisms in
+//' the community, 1 by default.
 //' @param interactions An optional numeric matrix representing the interaction
 //' between organisms in the population. This argument is set to R_NilValue by
 //' default.
@@ -59,7 +57,6 @@ NumericVector growth_one_group(NumericVector this_timestep,
     }
   }
 
-
   // Grow (loop: as many times as "step" indicates)
   NumericVector new_bugs = pick_new_bugs(arr, grow_step, true, prob);
   int bug;
@@ -78,16 +75,16 @@ NumericVector growth_one_group(NumericVector this_timestep,
 //'
 //' Growth is RANDOM: all species have the opportunity to grow each
 //' time this function is called, but whether they will is random and depends on
-//' their abundance (random). They grow at different rates depending not
-//' only on which group they belong to but also on their carrying capacity.
-//' Growth is not logistic.
+//' their abundance. Their growth probability varies depending not only on their
+//' abundances but also on their carrying capacity. Growth is not logistic.
 //'
-//' As opposed to growth_one_group(), the total growth rate is defined by the
-//' sum of the growth rates of every group, which are defined as
-//' \[grow_step * group's % of total carrying capacity]. Every group will have
-//' grow_step (by default 1) of its members grow in each run, and they can be
-//' from the same species or not. Also, how much will each species grow is
-//' proportional to the carrying capacity of its group. This is to avoid group
+//' As opposed to growth_one_group(), the growth rate (probability of being
+//' picked for growth) is determined for each individual by the carrying
+//' capacity of its group(\[grow_step * group's % of total carrying capacity]).
+//' An optionally passed interactions matrix has an effect as well. Every group
+//' will have grow_step (by default 1) of its present individuals grow in each
+//' run, and they can be from the same ASV/OTU/species or not. Also, growth step
+//' is proportional to the carrying capacity of its group. This is to avoid group
 //' extinction and also to ensure growth has a similar, proportional rate for
 //' each group so all groups reach their CC at the same time.
 //'`
@@ -164,16 +161,14 @@ NumericVector growth(NumericVector x,
 
 
 
-// [[Rcpp::depends(RcppArmadillo)]]
 //' This function simulates growth in a community by looking at the carrying
 //' capacities of the group they belong to. It takes a named vector,
 //' carrying_capacities.
 //'
 //' Growth is RANDOM but logistic: all species have the opportunity to grow each
 //' time this function is called, but whether they will is random and depends on
-//' their abundance (random). They grow at different rates depending not
-//' only on which group they belong to but also to how close they are to their
-//' carrying capacity (logistic)
+//' their abundance (random). Their growth probability varies depending not
+//' only on their abundances but also on their carrying capacity.
 //'
 //' As opposed to growth_one_group(), the growth rate is given by a logistic
 //' function and not grow_step. Another difference is that growing species are
@@ -181,7 +176,8 @@ NumericVector growth(NumericVector x,
 //' that the number of different species that can grow in each iteration of this
 //' function is not limited.
 //'
-//' The difference with growth() is that growth is logistic in this function.
+//' The difference with growth() is that growth is logistic in this function and
+//' there is not grow_step here.
 //'
 //' If the carrying capacity for a group was surpassed before starting the
 //' growth cycle, the species of that group will die at a proportionate rate,
@@ -241,8 +237,8 @@ NumericVector growth_log(NumericVector x,
 
 
 //' Checks if a given grow_step is ok for running a growth() function and adjusts
-//' it accordingly if it's not (for example, not allowing for it to cause too
-//' big of a growth).
+//' it accordingly if it's not (for example not allowing for it to cause too big
+//' of a growth, surpassing total wanted final community abundance).
 //' @param is_grow_step_a_perc Boolean: if false, grow_step is taken as a fixed
 //' value, so the step will always be the same. If true, it is taken to indicate
 //' a percentage - the step will be changed proportionally to the community size.

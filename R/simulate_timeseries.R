@@ -42,13 +42,11 @@ simulate_timeseries <- function (counts_data,
     start <- .my_transpose(counts_data)
   }
 
-  # Preparo la matriz que iré rellenando
-  len <- length (start)    # número de especies
-
-  if (is.null(abun_total)) { # establish default value.
-    abun_total <- sum (start) # número de individuos al que dejaremos crecer antes de volver a diluir cada vez
+  # Prepare empty matrix
+  len <- length (start)       # number of species
+  if (is.null(abun_total)) {  # establish default value.
+    abun_total <- sum (start) # total community abundance to be reached before each dilution
   }
-
   ns <-names(start)
   # if keep_all_timesteps, initialize data.frame with starting abundances
   if (keep_all_timesteps){
@@ -199,8 +197,8 @@ simulate_timeseries <- function (counts_data,
     dil <- dil + 1
 
     if (keep_all_timesteps){
-      # una vez crecidos, se puede diluir de nuevo: siguiente iteración del bucle
-      # pero si keep_all(...), antes "secuenciamos" (guardamos las abundancias)
+      # once the growth's finished, the next dilution can happen. But if
+      # keep_all_timesteps, we have to save the abundances first
       trajectory[as.character(dil),] <- this_timestep
     }
   }

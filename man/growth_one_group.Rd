@@ -2,14 +2,12 @@
 % Please edit documentation in R/RcppExports.R
 \name{growth_one_group}
 \alias{growth_one_group}
-\title{This Rcpp function simulates the growth of a population of organisms over a
-specified time step. It takes the current population abundance, the maximum
-growth rate, and the maximum total abundance as inputs, and returns an
-updated abundance vector that reflects the growth of the population. The
-function calculates the growth rate based on the current population
-abundance and the maximum possible total abundance, and calculates
-the probability of growth for each organism in the population based on their
-current abundance and any specified interactions between organisms. The
+\title{This Rcpp function simulates the growth of a community of organisms over a
+specified time step. It takes the current community abundances, a fixed
+growth step, and an optional interactions matrix as inputs, and returns
+an updated abundances vector that reflects the growth of the community. The
+function calculates the probability of growth for each organism based on
+their current abundance and any specified interactions between organisms. The
 function then randomly selects organisms to grow based on these probabilities
 and increases their abundance by grow_step (1 by default).
 The function takes four arguments:}
@@ -20,22 +18,20 @@ growth_one_group(this_timestep, grow_step, interactions = NULL)
 \item{this_timestep}{A numeric vector representing the current abundance of
 each organism in the population.}
 
-\item{grow_step}{An integer representing the maximum growth rate of the
-population, 1 by default.}
+\item{grow_step}{An integer representing the growth step for organisms in
+the community, 1 by default.}
 
 \item{interactions}{An optional numeric matrix representing the interaction
 between organisms in the population. This argument is set to R_NilValue by
 default.}
 }
 \description{
-This Rcpp function simulates the growth of a population of organisms over a
-specified time step. It takes the current population abundance, the maximum
-growth rate, and the maximum total abundance as inputs, and returns an
-updated abundance vector that reflects the growth of the population. The
-function calculates the growth rate based on the current population
-abundance and the maximum possible total abundance, and calculates
-the probability of growth for each organism in the population based on their
-current abundance and any specified interactions between organisms. The
+This Rcpp function simulates the growth of a community of organisms over a
+specified time step. It takes the current community abundances, a fixed
+growth step, and an optional interactions matrix as inputs, and returns
+an updated abundances vector that reflects the growth of the community. The
+function calculates the probability of growth for each organism based on
+their current abundance and any specified interactions between organisms. The
 function then randomly selects organisms to grow based on these probabilities
 and increases their abundance by grow_step (1 by default).
 The function takes four arguments:

@@ -3,8 +3,8 @@
 \name{check_step}
 \alias{check_step}
 \title{Checks if a given grow_step is ok for running a growth() function and adjusts
-it accordingly if it's not (for example, not allowing for it to cause too
-big of a growth).}
+it accordingly if it's not (for example not allowing for it to cause too big
+of a growth, surpassing total wanted final community abundance).}
 \usage{
 check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc = FALSE)
 }
@@ -17,6 +17,6 @@ iteration}
 }
 \description{
 Checks if a given grow_step is ok for running a growth() function and adjusts
-it accordingly if it's not (for example, not allowing for it to cause too
-big of a growth).
+it accordingly if it's not (for example not allowing for it to cause too big
+of a growth, surpassing total wanted final community abundance).
 }

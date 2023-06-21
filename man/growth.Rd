@@ -11,17 +11,17 @@ growth(x, carrying_capacities, grow_step, interactions = NULL)
 \description{
 Growth is RANDOM: all species have the opportunity to grow each
 time this function is called, but whether they will is random and depends on
-their abundance (random). They grow at different rates depending not
-only on which group they belong to but also on their carrying capacity.
-Growth is not logistic.
+their abundance. Their growth probability varies depending not only on their
+abundances but also on their carrying capacity. Growth is not logistic.
 }
 \details{
-As opposed to growth_one_group(), the total growth rate is defined by the
-sum of the growth rates of every group, which are defined as
-[grow_step * group's \% of total carrying capacity]. Every group will have
-grow_step (by default 1) of its members grow in each run, and they can be
-from the same species or not. Also, how much will each species grow is
-proportional to the carrying capacity of its group. This is to avoid group
+As opposed to growth_one_group(), the growth rate (probability of being
+picked for growth) is determined for each individual by the carrying
+capacity of its group([grow_step * group's \% of total carrying capacity]).
+An optionally passed interactions matrix has an effect as well. Every group
+will have grow_step (by default 1) of its present individuals grow in each
+run, and they can be from the same ASV/OTU/species or not. Also, growth step
+is proportional to the carrying capacity of its group. This is to avoid group
 extinction and also to ensure growth has a similar, proportional rate for
 each group so all groups reach their CC at the same time.
 `

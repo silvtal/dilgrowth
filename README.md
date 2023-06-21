@@ -20,6 +20,8 @@ Rcpp, RcppArmadillo, data.table, gsubfn, magrittr, tidyr, untb, utils, stats
 
 - `wrapper.sh`: Just a wrapper we use in our cluster. It launches `dilgrowth_old_1g.R` for different samples of an abundance table. Needs the `results.txt` PCG table + a `table.from.biom`-like abundance table. For each initial sample, a folder is generated that contains simulations _for each PCG separately_. Each PCG will reach the relative abundance that was specified on the PCG table.
 
+## Tests
+Numerous tests and their results available at /tests folder.
 
 ## Others
 

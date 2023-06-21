@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "silvia.talavera@uam.es",
            comment = c(ORCID = "0000-0002-6923-2876"))
-Description: This package includes command line scripts and standalone R/c++ functions for simulating growth-dilution experiments. The main script takes abundance data and simulate growth by randomly picking one or more species to grow in each iteration. When the desired total abundance is reached for the community, dilution happens by random sampling.
+Description: This package includes command line scripts and R/c++ functions for simulating growth-dilution experiments. The main script takes abundance data and simulate growth by randomly picking one or more species to grow in each iteration. When the desired total abundance is reached for the community, dilution happens by random sampling.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

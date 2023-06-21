@@ -11,9 +11,8 @@ growth_log(x, carrying_capacities, interactions = NULL)
 \description{
 Growth is RANDOM but logistic: all species have the opportunity to grow each
 time this function is called, but whether they will is random and depends on
-their abundance (random). They grow at different rates depending not
-only on which group they belong to but also to how close they are to their
-carrying capacity (logistic)
+their abundance (random). Their growth probability varies depending not
+only on their abundances but also on their carrying capacity.
 }
 \details{
 As opposed to growth_one_group(), the growth rate is given by a logistic
@@ -22,7 +21,8 @@ not chosen one by one by sampling, but with a binomial function. That means
 that the number of different species that can grow in each iteration of this
 function is not limited.
 
-The difference with growth() is that growth is logistic in this function.
+The difference with growth() is that growth is logistic in this function and
+there is not grow_step here.
 
 If the carrying capacity for a group was surpassed before starting the
 growth cycle, the species of that group will die at a proportionate rate,
