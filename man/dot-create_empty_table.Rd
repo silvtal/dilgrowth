@@ -2,8 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{.create_empty_table}
 \alias{.create_empty_table}
-\title{Create empty data.frame
-Source: https://stackoverflow.com/questions/10689055/create-an-empty-data-frame}
+\title{.create_empty_table}
 \usage{
 .create_empty_table(num_rows, num_cols)
 }
@@ -14,7 +13,6 @@ Source: https://stackoverflow.com/questions/10689055/create-an-empty-data-frame}
 Empty data.frame object
 }
 \description{
-Create empty data.frame
-Source: https://stackoverflow.com/questions/10689055/create-an-empty-data-frame
+Create empty data.frame. Source: https://stackoverflow.com/questions/10689055/create-an-empty-data-frame
 }
 \keyword{internal}

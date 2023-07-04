@@ -1,3 +1,5 @@
+#' get_abundance_and_tax_from_table
+#'
 #' This function reads a .csv/.tsv abundance table, where the last
 #' column (or row) is the taxonomy
 #'

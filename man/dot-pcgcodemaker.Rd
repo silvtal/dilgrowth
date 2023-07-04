@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{.pcgcodemaker}
 \alias{.pcgcodemaker}
-\title{Create factor from taxonomy data. Deprecated in v4. Entero == 1; Pseudo == 2; others == 3}
+\title{.pcgcodemaker}
 \usage{
 .pcgcodemaker(tax, f_ = FALSE)
 }

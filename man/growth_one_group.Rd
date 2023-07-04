@@ -2,15 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{growth_one_group}
 \alias{growth_one_group}
-\title{This Rcpp function simulates the growth of a community of organisms over a
-specified time step. It takes the current community abundances, a fixed
-growth step, and an optional interactions matrix as inputs, and returns
-an updated abundances vector that reflects the growth of the community. The
-function calculates the probability of growth for each organism based on
-their current abundance and any specified interactions between organisms. The
-function then randomly selects organisms to grow based on these probabilities
-and increases their abundance by grow_step (1 by default).
-The function takes four arguments:}
+\title{growth_one_group}
 \usage{
 growth_one_group(this_timestep, grow_step, interactions = NULL)
 }

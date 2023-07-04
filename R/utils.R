@@ -1,3 +1,5 @@
+#' .my_transpose
+#'
 #' Transpose a data.frame
 #'
 #' @param df A data.frame
@@ -15,8 +17,9 @@
 }
 
 
-#' Create empty data.frame
-#' Source: https://stackoverflow.com/questions/10689055/create-an-empty-data-frame
+#' .create_empty_table
+#'
+#' Create empty data.frame. Source: https://stackoverflow.com/questions/10689055/create-an-empty-data-frame
 #' @param num_rows
 #' @param num_cols
 #'
@@ -29,6 +32,8 @@
 }
 
 
+#' .pcgcodemaker
+#'
 #' Create factor from taxonomy data. Deprecated in v4. Entero == 1; Pseudo == 2; others == 3
 #'
 #' @param tax
@@ -54,6 +59,8 @@
 }
 
 
+#' .pcgcodemaker2
+#'
 #' Create factor from taxonomy data. Deprecated in v4. Bulkholderiales, Pseudomonadales, others, Xanthomonadales
 #'
 #' @param tax

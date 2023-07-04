@@ -116,13 +116,16 @@ option_list <- list(
   make_option(c("--logistic"), type = "logical",
               default = FALSE,
               help = "¿Should growth be logistic? If TRUE, the grow_step/growth rate of each species will change over the course of the simulation, in a logistic growth manner (see growth_log)."),
+  make_option(c("--no_of_simulations"), type = "integer",
+              default = 1,
+              help = "Number of simulations"),
+  make_option(c("--allow_group_extinctions"), type = "logical",
+              default = FALSE,
+              help = "If TRUE, simulations will continue even if one or more groups go extinct, and the function will try to reach fixation in all groups. Only applicable when carrying_capacities is not NULL (when there are multiple functional groups) Also, this being FALSE does NOT affect groups that were not in the community from the start (if there are missing groups from the start, there will be a warning). default FALSE"),
   make_option(c("--cores"), type = "integer",
               default = 1,
               help = "Number of cores to use in parallelization processes (mclapply). Default: 4.",
               metavar = "integer"),
-  make_option(c("--no_of_simulations"), type = "integer",
-              default = 1,
-              help = "Number of simulations"),
   # output params
   make_option(c("--outputname"), type = "character",
               default = "out",
@@ -149,6 +152,8 @@ cores <- opt$cores  # e.g. 16
 save_all  <- opt$save_all
 grow_step <- opt$grow_step
 is_grow_step_a_perc <- opt$is_grow_step_a_perc
+allow_group_extinctions <- opt$allow_group_extinctions
+
 if (is_grow_step_a_perc && (grow_step == 1)) {
   message("WARNING: grow_step has been defined as a percentage of value 1. All organisms will duplicate every iteration. If you meant for grow_step to be a fixed value, set is_grow_step_a_perc to FALSE instead.")
 }
@@ -192,7 +197,7 @@ system(paste("mkdir -p", outdir))
 # =============
 # create counts
 # =============
-# s is the original sample, an abundance vector
+# s is the original sample, exp[s] is a vector of abundances
 # selected_species is a vector of species from that vector
 if (is.null(selected_species)) {
   counts <- exp[s]
@@ -237,16 +242,18 @@ if (abun_total == 0) {
   abund_temp <- mclapply(X = 1:no_of_simulations,
                          FUN = function(iter) {
                            trajectory <- simulate_timeseries(counts,
+                                                             carrying_capacities = carrying_capacities,
                                                              interactions = interactions,
                                                              logistic = logistic,
-                                                             abun_total = abun_total,
-                                                             carrying_capacities = carrying_capacities,
                                                              dilution = dilution,
                                                              no_of_dil = no_of_dil,
                                                              fixation_at = fixation_at,
+                                                             abun_total = abun_total,
                                                              grow_step = grow_step,
                                                              is_grow_step_a_perc = is_grow_step_a_perc,
-                                                             keep_all_timesteps = save_all)
+                                                             keep_all_timesteps = save_all,
+                                                             allow_group_extinctions = allow_group_extinctions,
+                                                             force_continue = FALSE)
                            print(paste("Simulation", iter, "finished for", s))
                            return(trajectory)
                          }, mc.cores = cores)

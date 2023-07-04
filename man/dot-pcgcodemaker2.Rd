@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{.pcgcodemaker2}
 \alias{.pcgcodemaker2}
-\title{Create factor from taxonomy data. Deprecated in v4. Bulkholderiales, Pseudomonadales, others, Xanthomonadales}
+\title{.pcgcodemaker2}
 \usage{
 .pcgcodemaker2(tax, together = TRUE)
 }

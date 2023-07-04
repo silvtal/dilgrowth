@@ -6,6 +6,8 @@ using namespace std;
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
+//' pick_new_bugs
+//'
 //' Sampling function for growth_one_group(), growth()
 //' @param arr is a vector of positions. If the abundance vector of interest has
 //' 5 members, x must be [1 2 3 4 5].
@@ -19,6 +21,8 @@ NumericVector pick_new_bugs(NumericVector arr,
   return (pos);
 }
 
+//' growth_one_group
+//'
 //' This Rcpp function simulates the growth of a community of organisms over a
 //' specified time step. It takes the current community abundances, a fixed
 //' growth step, and an optional interactions matrix as inputs, and returns
@@ -69,6 +73,8 @@ NumericVector growth_one_group(NumericVector this_timestep,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
+//' growth
+//'
 //' This function simulates growth in a community by looking at the carrying
 //' capacities of the group they belong to. It takes a named vector,
 //' carrying_capacities.
@@ -161,6 +167,8 @@ NumericVector growth(NumericVector x,
 
 
 
+//' growth_log
+//'
 //' This function simulates growth in a community by looking at the carrying
 //' capacities of the group they belong to. It takes a named vector,
 //' carrying_capacities.
@@ -173,8 +181,8 @@ NumericVector growth(NumericVector x,
 //' As opposed to growth_one_group(), the growth rate is given by a logistic
 //' function and not grow_step. Another difference is that growing species are
 //' not chosen one by one by sampling, but with a binomial function. That means
-//' that the number of different species that can grow in each iteration of this
-//' function is not limited.
+//' that the number of different species and the number of individuals that can
+//' grow in each iteration of this function is not limited.
 //'
 //' The difference with growth() is that growth is logistic in this function and
 //' there is not grow_step here.
@@ -236,6 +244,8 @@ NumericVector growth_log(NumericVector x,
 }
 
 
+//' check_step
+//'
 //' Checks if a given grow_step is ok for running a growth() function and adjusts
 //' it accordingly if it's not (for example not allowing for it to cause too big
 //' of a growth, surpassing total wanted final community abundance).
@@ -275,6 +285,8 @@ int check_step(NumericVector this_timestep,
 }
 
 
+//' full_growth
+//'
 //' This function consists in a loop that runs growth(...)() functions as many
 //' times as needed to reach a given population size.
 //' @export

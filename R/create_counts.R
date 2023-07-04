@@ -1,3 +1,5 @@
+#' create_counts
+#'
 #' This function parses and puts together in a list of data.frames all the
 #' count data for time series abundance data. For each timestep / transfer, it
 #' saves the mean value of all available replicates.

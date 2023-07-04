@@ -2,19 +2,21 @@
 % Please edit documentation in R/RcppExports.R
 \name{growth}
 \alias{growth}
-\title{This function simulates growth in a community by looking at the carrying
-capacities of the group they belong to. It takes a named vector,
-carrying_capacities.}
+\title{growth}
 \usage{
 growth(x, carrying_capacities, grow_step, interactions = NULL)
 }
 \description{
+This function simulates growth in a community by looking at the carrying
+capacities of the group they belong to. It takes a named vector,
+carrying_capacities.
+}
+\details{
 Growth is RANDOM: all species have the opportunity to grow each
 time this function is called, but whether they will is random and depends on
 their abundance. Their growth probability varies depending not only on their
 abundances but also on their carrying capacity. Growth is not logistic.
-}
-\details{
+
 As opposed to growth_one_group(), the growth rate (probability of being
 picked for growth) is determined for each individual by the carrying
 capacity of its group([grow_step * group's \% of total carrying capacity]).

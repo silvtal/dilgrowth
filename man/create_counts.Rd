@@ -2,9 +2,7 @@
 % Please edit documentation in R/create_counts.R
 \name{create_counts}
 \alias{create_counts}
-\title{This function parses and puts together in a list of data.frames all the
-count data for time series abundance data. For each timestep / transfer, it
-saves the mean value of all available replicates.}
+\title{create_counts}
 \usage{
 create_counts(
   exp,
@@ -36,12 +34,16 @@ create_counts(
 
 }
 \description{
+This function parses and puts together in a list of data.frames all the
+count data for time series abundance data. For each timestep / transfer, it
+saves the mean value of all available replicates.
+}
+\details{
 If there are no available replicates for a given transfer, it saves the data
 for the previous transfer (in other words, assumes no abundance changes took
 place). This assumption can be overridden with the option
 "allow_empty_transfers", that will set "NA" instead.
-}
-\details{
+
 If select_transfers is not NULL, is has to be a vector. If you want to pick
 only transfers 0, 2 and 4, you must input c(0, 2, 4)
 }

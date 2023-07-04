@@ -2,8 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{full_growth}
 \alias{full_growth}
-\title{This function consists in a loop that runs growth(...)() functions as many
-times as needed to reach a given population size.}
+\title{full_growth}
 \usage{
 full_growth(
   this_timestep,

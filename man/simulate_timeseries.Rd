@@ -2,9 +2,7 @@
 % Please edit documentation in R/simulate_timeseries.R
 \name{simulate_timeseries}
 \alias{simulate_timeseries}
-\title{Main function. Simulates the changes in abundances for a given initial
-abundance data. The model has a dilution and growth system. After each
-dilution, a random organism is duplicated}
+\title{simulate_timeseries}
 \usage{
 simulate_timeseries(
   counts_data,
@@ -18,20 +16,30 @@ simulate_timeseries(
   grow_step = 1,
   is_grow_step_a_perc = FALSE,
   keep_all_timesteps = FALSE,
+  allow_group_extinctions = FALSE,
   force_continue = FALSE
 )
 }
 \arguments{
-\item{fixation_at}{cycle. When this value is reached, the cycle ends and another dilution (if needed)
-happens. If NULL, \code{abun_total} is set to the initial total abundance}
-
 \item{grow_step}{Number of individuals that grow each timestep (Default: 1)}
 
-\item{force_continue}{}
+\item{allow_group_extinctions}{If TRUE, simulations will continue even if one
+or more groups go extinct, and the function will try to reach fixation in all
+groups. Only applicable when carrying_capacities is not NULL (when there are
+multiple functional groups) Also, this being FALSE does NOT affect groups
+that were not in the community from the start (if there are missing groups
+from the start, there will be a warning).}
+
+\item{force_continue}{If TRUE, continue when ALL bugs go extinct because of a
+strong dilution. This takes one random bug in order to continue, even when it
+was actually diluted out. Affects the entire community, not each individual
+functional group.}
 }
 \value{
 
 }
 \description{
-Uses c++ functions for speed
+Main function. Simulates the changes in abundances for a given initial
+abundance data. The model has a dilution and growth system. After each
+dilution, a random organism is duplicated. Uses c++ functions for speed.
 }

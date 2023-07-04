@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{pick_new_bugs}
 \alias{pick_new_bugs}
-\title{Sampling function for growth_one_group(), growth()}
+\title{pick_new_bugs}
 \usage{
 pick_new_bugs(arr, size, replace, prob)
 }

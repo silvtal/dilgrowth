@@ -2,8 +2,7 @@
 % Please edit documentation in R/get_abundance_and_tax_from_table.R
 \name{get_abundance_and_tax_from_table}
 \alias{get_abundance_and_tax_from_table}
-\title{This function reads a .csv/.tsv abundance table, where the last
-column (or row) is the taxonomy}
+\title{get_abundance_and_tax_from_table}
 \usage{
 get_abundance_and_tax_from_table(
   exp_file,

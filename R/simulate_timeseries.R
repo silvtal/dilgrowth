@@ -1,8 +1,8 @@
+#' simulate_timeseries
+#'
 #' Main function. Simulates the changes in abundances for a given initial
 #' abundance data. The model has a dilution and growth system. After each
-#' dilution, a random organism is duplicated
-#'
-#' Uses c++ functions for speed
+#' dilution, a random organism is duplicated. Uses c++ functions for speed.
 #'
 #' @param counts_data
 #' @param carrying_capacities
@@ -11,11 +11,18 @@
 #' @param dilution
 #' @param no_of_dil
 #' @param fixation_at
-#' cycle. When this value is reached, the cycle ends and another dilution (if needed)
-#' happens. If NULL, \code{abun_total} is set to the initial total abundance
 #' @param grow_step Number of individuals that grow each timestep (Default: 1)
 #' @param keep_all_timesteps
-#' @param force_continue
+#' @param allow_group_extinctions If TRUE, simulations will continue even if one
+#' or more groups go extinct, and the function will try to reach fixation in all
+#' groups. Only applicable when carrying_capacities is not NULL (when there are
+#' multiple functional groups) Also, this being FALSE does NOT affect groups
+#' that were not in the community from the start (if there are missing groups
+#' from the start, there will be a warning).
+#' @param force_continue If TRUE, continue when ALL bugs go extinct because of a
+#' strong dilution. This takes one random bug in order to continue, even when it
+#' was actually diluted out. Affects the entire community, not each individual
+#' functional group.
 #'
 #' @return
 #' @export
@@ -30,8 +37,11 @@ simulate_timeseries <- function (counts_data,
                                  grow_step=1,
                                  is_grow_step_a_perc=FALSE,
                                  keep_all_timesteps=FALSE,
+                                 allow_group_extinctions=FALSE,
                                  force_continue=FALSE) {
   already_excluded <- c() # we'll exclude groups with total abundance of 0
+  if (!is.null(already_excluded)) {warning(paste("Group(s) absent from starting data:", already_excluded))}
+
   # counts_data puede ser un string o un dataframe de una columna como en el wrapper de /simuls
   if (is.atomic(counts_data)) {
     start <- counts_data
@@ -64,25 +74,10 @@ simulate_timeseries <- function (counts_data,
   this_timestep <- start
   dil <- 0
 
+  # Check if fixation has occured already (if it has, simulations stop)
   # When checking for fixation, if there are multiple groups we must check for
   # fixation in each group separately
-  if (is.null(carrying_capacities)) {
-    not_fixated <- max(this_timestep)/sum(this_timestep) < fixation_at
-  } else {
-    df <- data.frame(groups=names(carrying_capacities), abundances=as.numeric(this_timestep))
-    total_abundances <- aggregate(abundances ~ groups, df, sum)
-    # put together in a df the abundance, group and group's capacity for each otu
-    df <- merge(df, total_abundances, by = "groups")
-    names(df) <- c("groups", "abundances", "total_abundances")
-
-    max_abundances <- aggregate(abundances ~ groups, df, max)
-    # Check if any element in the groups vector surpasses 50% of the within-group total abundance
-    # Check for each group
-    fixated <- sapply(unique(df$groups), function(gg) {
-      group_df <- df[df$groups == gg, ]
-      any(group_df$abundances >= 0.5 * group_df$total_abundances)
-    }); not_fixated <- any(!fixated)
-  }
+  not_fixated <- !check_for_fixation(this_timestep, carrying_capacities, fixation_at)
 
   while ((dil < no_of_dil) & not_fixated) {
     ## CASE 1 -- All taxa extinct or almost
@@ -152,17 +147,21 @@ simulate_timeseries <- function (counts_data,
       }
       zero_groups <-  groups[sum_by_group == 0]
 
-      # If there are zero groups, redefine abun_total
+      # If there are zero groups
       if (length(zero_groups) > 0) {
-        for (zg in zero_groups) {
-          if (!(zg %in% already_excluded)) {
-            abun_total <- abun_total - carrying_capacities[zg][[1]]
-            already_excluded <- c(already_excluded, zg)
-            message(paste0("WARNING: The following group has no abundance and was excluded: ", zg, ". Adjusting abun_total to ", abun_total, " accordingly."))
+        if (!allow_group_extinctions) {# If not allowed, stop()
+          stop(paste0("Some group(s) have gone extinct (", zero_groups, "). Stopping the simulations..."))
+        } else { # If they are allowed, redefine abun_total
+          for (zg in zero_groups) {
+            if (!(zg %in% already_excluded)) {
+              abun_total <- abun_total - carrying_capacities[zg][[1]]
+              already_excluded <- c(already_excluded, zg)
+              message(paste0("WARNING: The following group has no abundance and was excluded: ", zg, ". Adjusting abun_total to ", abun_total, " accordingly."))
+            }
           }
         }
       }
-      # Choose growth function; we could out "empty" groups for speed reasons;
+      # Choose growth function; we could use "empty" groups for speed reasons;
       # that is, redefining carrying_capacity and interactions so they don't
       # contain species from zero groups. But it's not necessary.
       # The important bit is to redefine abun_total to avoid an infinite loop.
@@ -201,9 +200,12 @@ simulate_timeseries <- function (counts_data,
       # keep_all_timesteps, we have to save the abundances first
       trajectory[as.character(dil),] <- this_timestep
     }
+
+    # Check again for fixation before next iteration
+    not_fixated <- !check_for_fixation(this_timestep, carrying_capacities, fixation_at)
   }
 
-  # If the loop has stopped because of premature fixation
+  # If the loop has stopped because of fixation
   if (not_fixated == FALSE) {
     write(paste0(fixation_at*100, "% fixation of ",
                  ns[this_timestep!=0], " after ", dil, " dilutions."), stdout())

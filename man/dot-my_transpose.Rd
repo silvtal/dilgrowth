@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{.my_transpose}
 \alias{.my_transpose}
-\title{Transpose a data.frame}
+\title{.my_transpose}
 \usage{
 .my_transpose(df)
 }

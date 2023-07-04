@@ -2,24 +2,26 @@
 % Please edit documentation in R/RcppExports.R
 \name{growth_log}
 \alias{growth_log}
-\title{This function simulates growth in a community by looking at the carrying
-capacities of the group they belong to. It takes a named vector,
-carrying_capacities.}
+\title{growth_log}
 \usage{
 growth_log(x, carrying_capacities, interactions = NULL)
 }
 \description{
+This function simulates growth in a community by looking at the carrying
+capacities of the group they belong to. It takes a named vector,
+carrying_capacities.
+}
+\details{
 Growth is RANDOM but logistic: all species have the opportunity to grow each
 time this function is called, but whether they will is random and depends on
 their abundance (random). Their growth probability varies depending not
 only on their abundances but also on their carrying capacity.
-}
-\details{
+
 As opposed to growth_one_group(), the growth rate is given by a logistic
 function and not grow_step. Another difference is that growing species are
 not chosen one by one by sampling, but with a binomial function. That means
-that the number of different species that can grow in each iteration of this
-function is not limited.
+that the number of different species and the number of individuals that can
+grow in each iteration of this function is not limited.
 
 The difference with growth() is that growth is logistic in this function and
 there is not grow_step here.
