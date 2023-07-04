@@ -16,7 +16,7 @@ simulate_timeseries(
   grow_step = 1,
   is_grow_step_a_perc = FALSE,
   keep_all_timesteps = FALSE,
-  allow_group_extinctions = FALSE,
+  allow_group_extinctions = TRUE,
   force_continue = FALSE
 )
 }

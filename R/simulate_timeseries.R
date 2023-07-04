@@ -38,7 +38,7 @@ simulate_timeseries <- function (counts_data,
                                  grow_step=1,
                                  is_grow_step_a_perc=FALSE,
                                  keep_all_timesteps=FALSE,
-                                 allow_group_extinctions=FALSE,
+                                 allow_group_extinctions=TRUE,
                                  force_continue=FALSE) {
   already_excluded <- c() # we'll exclude groups with total abundance of 0
   if (!is.null(already_excluded)) {warning(paste("Group(s) absent from starting data:", already_excluded))}
@@ -148,7 +148,7 @@ simulate_timeseries <- function (counts_data,
       }
       zero_groups <-  groups[sum_by_group == 0]
 
-      # If there are zero groups
+      # If there are zero groups (these do not count the ones in "already_excluded" originally!)
       if (length(zero_groups) > 0) {
         if (!allow_group_extinctions) {# If not allowed, stop()
           stop(paste0("Some group(s) have gone extinct (", zero_groups, "). Stopping the simulations..."))
