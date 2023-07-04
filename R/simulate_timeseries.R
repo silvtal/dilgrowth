@@ -2,7 +2,8 @@
 #'
 #' Main function. Simulates the changes in abundances for a given initial
 #' abundance data. The model has a dilution and growth system. After each
-#' dilution, a random organism is duplicated. Uses c++ functions for speed.
+#' dilution, one or more random organism is duplicated (unless growth is set to
+#' be logistic, in which case growth is not limited). Depends on c++ functions.
 #'
 #' @param counts_data
 #' @param carrying_capacities
