@@ -4,17 +4,22 @@
 \alias{check_step}
 \title{check_step}
 \usage{
-check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc = FALSE)
+check_step(
+  this_timestep,
+  abun_total,
+  growth_step,
+  is_growth_step_a_perc = FALSE
+)
 }
 \arguments{
-\item{is_grow_step_a_perc}{Boolean: if false, grow_step is taken as a fixed
+\item{is_growth_step_a_perc}{Boolean: if false, growth_step is taken as a fixed
 value, so the step will always be the same. If true, it is taken to indicate
 a percentage - the step will be changed proportionally to the community size.
-If grow_step is 0.02, 2\% of the members in the community will grow the next
+If growth_step is 0.02, 2\% of the members in the community will grow the next
 iteration}
 }
 \description{
-Checks if a given grow_step is ok for running a growth() function and adjusts
+Checks if a given growth_step is ok for running a growth() function and adjusts
 it accordingly if it's not (for example not allowing for it to cause too big
 of a growth, surpassing total wanted final community abundance).
 }

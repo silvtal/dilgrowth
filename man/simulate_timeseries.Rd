@@ -13,15 +13,15 @@ simulate_timeseries(
   no_of_dil = 12,
   fixation_at = 1,
   abun_total = NULL,
-  grow_step = 1,
-  is_grow_step_a_perc = FALSE,
+  growth_step = 1,
+  is_growth_step_a_perc = FALSE,
   keep_all_timesteps = FALSE,
   allow_group_extinctions = TRUE,
   force_continue = FALSE
 )
 }
 \arguments{
-\item{grow_step}{Number of individuals that grow each timestep (Default: 1)}
+\item{growth_step}{Number of individuals that grow each timestep (Default: 1)}
 
 \item{allow_group_extinctions}{If TRUE, simulations will continue even if one
 or more groups go extinct, and the function will try to reach fixation in all

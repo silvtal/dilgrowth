@@ -20,18 +20,18 @@ pick_new_bugs <- function(arr, size, replace, prob) {
 #' function calculates the probability of growth for each organism based on
 #' their current abundance and any specified interactions between organisms. The
 #' function then randomly selects organisms to grow based on these probabilities
-#' and increases their abundance by grow_step (1 by default).
+#' and increases their abundance by growth_step (1 by default).
 #' The function takes four arguments:
 #' @param this_timestep A numeric vector representing the current abundance of
 #' each organism in the population.
-#' @param grow_step An integer representing the growth step for organisms in
+#' @param growth_step An integer representing the growth step for organisms in
 #' the community, 1 by default.
 #' @param interactions An optional numeric matrix representing the interaction
 #' between organisms in the population. This argument is set to R_NilValue by
 #' default.
 #' @export
-growth_one_group <- function(this_timestep, grow_step, interactions = NULL) {
-    .Call(`_dilgrowth_growth_one_group`, this_timestep, grow_step, interactions)
+growth_one_group <- function(this_timestep, growth_step, interactions = NULL) {
+    .Call(`_dilgrowth_growth_one_group`, this_timestep, growth_step, interactions)
 }
 
 #' growth
@@ -47,17 +47,17 @@ growth_one_group <- function(this_timestep, grow_step, interactions = NULL) {
 #'
 #' As opposed to growth_one_group(), the growth rate (probability of being
 #' picked for growth) is determined for each individual by the carrying
-#' capacity of its group(\[grow_step * group's % of total carrying capacity]).
+#' capacity of its group(\[growth_step * group's % of total carrying capacity]).
 #' An optionally passed interactions matrix has an effect as well. Every group
-#' will have grow_step (by default 1) of its present individuals grow in each
+#' will have growth_step (by default 1) of its present individuals grow in each
 #' run, and they can be from the same ASV/OTU/species or not. Also, growth step
 #' is proportional to the carrying capacity of its group. This is to avoid group
 #' extinction and also to ensure growth has a similar, proportional rate for
 #' each group so all groups reach their CC at the same time.
 #'`
 #' @export
-growth <- function(x, carrying_capacities, grow_step, interactions = NULL) {
-    .Call(`_dilgrowth_growth`, x, carrying_capacities, grow_step, interactions)
+growth <- function(x, carrying_capacities, growth_step, interactions = NULL) {
+    .Call(`_dilgrowth_growth`, x, carrying_capacities, growth_step, interactions)
 }
 
 #' growth_log
@@ -72,13 +72,13 @@ growth <- function(x, carrying_capacities, grow_step, interactions = NULL) {
 #' only on their abundances but also on their carrying capacity.
 #'
 #' As opposed to growth_one_group(), the growth rate is given by a logistic
-#' function and not grow_step. Another difference is that growing species are
+#' function and not growth_step. Another difference is that growing species are
 #' not chosen one by one by sampling, but with a binomial function. That means
 #' that the number of different species and the number of individuals that can
 #' grow in each iteration of this function is not limited.
 #'
 #' The difference with growth() is that growth is logistic in this function and
-#' there is not grow_step here.
+#' there is not growth_step here.
 #'
 #' If the carrying capacity for a group was surpassed before starting the
 #' growth cycle, the species of that group will die at a proportionate rate,
@@ -91,17 +91,17 @@ growth_log <- function(x, carrying_capacities, interactions = NULL) {
 
 #' check_step
 #'
-#' Checks if a given grow_step is ok for running a growth() function and adjusts
+#' Checks if a given growth_step is ok for running a growth() function and adjusts
 #' it accordingly if it's not (for example not allowing for it to cause too big
 #' of a growth, surpassing total wanted final community abundance).
-#' @param is_grow_step_a_perc Boolean: if false, grow_step is taken as a fixed
+#' @param is_growth_step_a_perc Boolean: if false, growth_step is taken as a fixed
 #' value, so the step will always be the same. If true, it is taken to indicate
 #' a percentage - the step will be changed proportionally to the community size.
-#' If grow_step is 0.02, 2% of the members in the community will grow the next
+#' If growth_step is 0.02, 2% of the members in the community will grow the next
 #' iteration
 #' @export
-check_step <- function(this_timestep, abun_total, grow_step, is_grow_step_a_perc = FALSE) {
-    .Call(`_dilgrowth_check_step`, this_timestep, abun_total, grow_step, is_grow_step_a_perc)
+check_step <- function(this_timestep, abun_total, growth_step, is_growth_step_a_perc = FALSE) {
+    .Call(`_dilgrowth_check_step`, this_timestep, abun_total, growth_step, is_growth_step_a_perc)
 }
 
 #' full_growth
@@ -109,7 +109,7 @@ check_step <- function(this_timestep, abun_total, grow_step, is_grow_step_a_perc
 #' This function consists in a loop that runs growth(...)() functions as many
 #' times as needed to reach a given population size.
 #' @export
-full_growth <- function(this_timestep, abun_total, grow_step, is_grow_step_a_perc = FALSE, func = "growth", interactions = NULL, carrying_capacities = NULL) {
-    .Call(`_dilgrowth_full_growth`, this_timestep, abun_total, grow_step, is_grow_step_a_perc, func, interactions, carrying_capacities)
+full_growth <- function(this_timestep, abun_total, growth_step, is_growth_step_a_perc = FALSE, func = "growth", interactions = NULL, carrying_capacities = NULL) {
+    .Call(`_dilgrowth_full_growth`, this_timestep, abun_total, growth_step, is_growth_step_a_perc, func, interactions, carrying_capacities)
 }
 

@@ -30,11 +30,11 @@ NumericVector pick_new_bugs(NumericVector arr,
 //' function calculates the probability of growth for each organism based on
 //' their current abundance and any specified interactions between organisms. The
 //' function then randomly selects organisms to grow based on these probabilities
-//' and increases their abundance by grow_step (1 by default).
+//' and increases their abundance by growth_step (1 by default).
 //' The function takes four arguments:
 //' @param this_timestep A numeric vector representing the current abundance of
 //' each organism in the population.
-//' @param grow_step An integer representing the growth step for organisms in
+//' @param growth_step An integer representing the growth step for organisms in
 //' the community, 1 by default.
 //' @param interactions An optional numeric matrix representing the interaction
 //' between organisms in the population. This argument is set to R_NilValue by
@@ -42,7 +42,7 @@ NumericVector pick_new_bugs(NumericVector arr,
 //' @export
 // [[Rcpp::export]]
 NumericVector growth_one_group(NumericVector this_timestep,
-                               double grow_step,
+                               double growth_step,
                                Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue) {
 
   // We will sample the growth positions from here
@@ -62,7 +62,7 @@ NumericVector growth_one_group(NumericVector this_timestep,
   }
 
   // Grow (loop: as many times as "step" indicates)
-  NumericVector new_bugs = pick_new_bugs(arr, grow_step, true, prob);
+  NumericVector new_bugs = pick_new_bugs(arr, growth_step, true, prob);
   int bug;
   for (std::size_t i = 0; i < new_bugs.size(); i++) {
     bug = new_bugs[i];
@@ -86,9 +86,9 @@ NumericVector growth_one_group(NumericVector this_timestep,
 //'
 //' As opposed to growth_one_group(), the growth rate (probability of being
 //' picked for growth) is determined for each individual by the carrying
-//' capacity of its group(\[grow_step * group's % of total carrying capacity]).
+//' capacity of its group(\[growth_step * group's % of total carrying capacity]).
 //' An optionally passed interactions matrix has an effect as well. Every group
-//' will have grow_step (by default 1) of its present individuals grow in each
+//' will have growth_step (by default 1) of its present individuals grow in each
 //' run, and they can be from the same ASV/OTU/species or not. Also, growth step
 //' is proportional to the carrying capacity of its group. This is to avoid group
 //' extinction and also to ensure growth has a similar, proportional rate for
@@ -98,7 +98,7 @@ NumericVector growth_one_group(NumericVector this_timestep,
 // [[Rcpp::export]]
 NumericVector growth(NumericVector x,
                      NumericVector carrying_capacities,
-                     int grow_step,
+                     int growth_step,
                      Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue) { // named vector
 
   // Set variables
@@ -135,7 +135,7 @@ NumericVector growth(NumericVector x,
       g[i] = (names[i] == group);
     }
    // (only bugs from this group can grow)
-   // (also check magnitude of grow_step)
+   // (also check magnitude of growth_step)
     NumericVector group_prob(size);
     double sum_group = 0;
     for (int i = 0; i < size; i++) {
@@ -147,7 +147,7 @@ NumericVector growth(NumericVector x,
       }
     }
     sum_group = trunc(sum_group);
-    int step = min(static_cast<int>(grow_step), static_cast<int>(sum_group)); // TODO
+    int step = min(static_cast<int>(growth_step), static_cast<int>(sum_group)); // TODO
 
     // Stop if no one can grow in this group
     if (sum(group_prob)==0) {
@@ -157,7 +157,7 @@ NumericVector growth(NumericVector x,
     // Grow
     NumericVector new_bugs = pick_new_bugs(arr, step, true, group_prob);
     int bug;
-    for (int i = 0; i < new_bugs.size(); i++) {  // grow_step times
+    for (int i = 0; i < new_bugs.size(); i++) {  // growth_step times
       bug = new_bugs[i];
       x[bug] += (1.0 * (group_ccs[group]/sum(group_ccs))); // % of total CC
       }
@@ -179,13 +179,13 @@ NumericVector growth(NumericVector x,
 //' only on their abundances but also on their carrying capacity.
 //'
 //' As opposed to growth_one_group(), the growth rate is given by a logistic
-//' function and not grow_step. Another difference is that growing species are
+//' function and not growth_step. Another difference is that growing species are
 //' not chosen one by one by sampling, but with a binomial function. That means
 //' that the number of different species and the number of individuals that can
 //' grow in each iteration of this function is not limited.
 //'
 //' The difference with growth() is that growth is logistic in this function and
-//' there is not grow_step here.
+//' there is not growth_step here.
 //'
 //' If the carrying capacity for a group was surpassed before starting the
 //' growth cycle, the species of that group will die at a proportionate rate,
@@ -246,37 +246,37 @@ NumericVector growth_log(NumericVector x,
 
 //' check_step
 //'
-//' Checks if a given grow_step is ok for running a growth() function and adjusts
+//' Checks if a given growth_step is ok for running a growth() function and adjusts
 //' it accordingly if it's not (for example not allowing for it to cause too big
 //' of a growth, surpassing total wanted final community abundance).
-//' @param is_grow_step_a_perc Boolean: if false, grow_step is taken as a fixed
+//' @param is_growth_step_a_perc Boolean: if false, growth_step is taken as a fixed
 //' value, so the step will always be the same. If true, it is taken to indicate
 //' a percentage - the step will be changed proportionally to the community size.
-//' If grow_step is 0.02, 2% of the members in the community will grow the next
+//' If growth_step is 0.02, 2% of the members in the community will grow the next
 //' iteration
 //' @export
 // [[Rcpp::export]]
 int check_step(NumericVector this_timestep,
                int abun_total,
-               double grow_step,
-               bool is_grow_step_a_perc = false) {
+               double growth_step,
+               bool is_growth_step_a_perc = false) {
 
-  int step = grow_step;
-  if (is_grow_step_a_perc) {
+  int step = growth_step;
+  if (is_growth_step_a_perc) {
     // Apply a percentage first if necessary
-    if ((grow_step > 1) || (grow_step < 0)) {
-      Rf_error("If grow_step is a percentage, it has to be a value between 0 (0% of the members of the community will grow) and 1 (100% of members will grow, the total abundance will duplicate every iteration).");
+    if ((growth_step > 1) || (growth_step < 0)) {
+      Rf_error("If growth_step is a percentage, it has to be a value between 0 (0% of the members of the community will grow) and 1 (100% of members will grow, the total abundance will duplicate every iteration).");
     } else {
-      step = trunc(grow_step * sum(this_timestep));
+      step = trunc(growth_step * sum(this_timestep));
       step = max(1, step); // never less than 1 !!
     }
   }
 
   // Check magnitude of step
-  if (trunc((sum(this_timestep)) + grow_step) > abun_total) { // trunc: this_timestep might not have whole numbers.
+  if (trunc((sum(this_timestep)) + growth_step) > abun_total) { // trunc: this_timestep might not have whole numbers.
     // Avoid growing too much (when step>1)
     step = (abun_total - sum(this_timestep));
-  } else if (sum(this_timestep) < grow_step) {
+  } else if (sum(this_timestep) < growth_step) {
     // Ensure there are enough bugs to grow with that step
     int half = trunc(sum(this_timestep)/2);
     step = std::max(half, 1);
@@ -293,19 +293,19 @@ int check_step(NumericVector this_timestep,
 // [[Rcpp::export]]
 NumericVector full_growth(NumericVector this_timestep,
                           int abun_total,
-                          int grow_step,
-                          bool is_grow_step_a_perc = false,
+                          int growth_step,
+                          bool is_growth_step_a_perc = false,
                           String func = "growth",
                           Rcpp::Nullable<Rcpp::NumericMatrix> interactions = R_NilValue,
                           Rcpp::Nullable<Rcpp::NumericVector> carrying_capacities = R_NilValue) {
   if (func == "growth_one_group") {
     while (sum(this_timestep) < abun_total) {
-      int step      = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
+      int step      = check_step(this_timestep, abun_total, growth_step, is_growth_step_a_perc);
       this_timestep = growth_one_group(this_timestep, step, interactions.get());
     }
   } else if (func == "growth" && carrying_capacities.isNotNull()) {
     while (sum(this_timestep) < abun_total) {
-      int step      = check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc);
+      int step      = check_step(this_timestep, abun_total, growth_step, is_growth_step_a_perc);
       this_timestep = growth(this_timestep, carrying_capacities.get(), step, interactions.get());
     }
   } else if (func == "growth_log" && carrying_capacities.isNotNull()) {

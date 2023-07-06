@@ -4,7 +4,7 @@
 \alias{growth}
 \title{growth}
 \usage{
-growth(x, carrying_capacities, grow_step, interactions = NULL)
+growth(x, carrying_capacities, growth_step, interactions = NULL)
 }
 \description{
 This function simulates growth in a community by looking at the carrying
@@ -19,9 +19,9 @@ abundances but also on their carrying capacity. Growth is not logistic.
 
 As opposed to growth_one_group(), the growth rate (probability of being
 picked for growth) is determined for each individual by the carrying
-capacity of its group([grow_step * group's \% of total carrying capacity]).
+capacity of its group([growth_step * group's \% of total carrying capacity]).
 An optionally passed interactions matrix has an effect as well. Every group
-will have grow_step (by default 1) of its present individuals grow in each
+will have growth_step (by default 1) of its present individuals grow in each
 run, and they can be from the same ASV/OTU/species or not. Also, growth step
 is proportional to the carrying capacity of its group. This is to avoid group
 extinction and also to ensure growth has a similar, proportional rate for

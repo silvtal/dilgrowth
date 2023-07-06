@@ -1,7 +1,7 @@
 # ==============================================================================
 # This test creates simulation plots to show drift by showing the estochasticity
 # of multiple instances of the same simulation. Some simulations will have
-# interactions and others won't. Some will have a fixed grow_step value (1) and
+# interactions and others won't. Some will have a fixed growth_step value (1) and
 # others will have a proggressive one (1%).
 # ==============================================================================
 
@@ -62,12 +62,12 @@ grid_list <- list()
 colors1 <- c("coral", "lightgreen")
 colors2 <- c("darkred", "darkgreen")
 
-# Loop over all combinations of grow_step and interaction
-for (GROW_STEP in c(1, 0.01)) {
-  if (GROW_STEP < 1) {GD_PERC=TRUE} else {GD_PERC=FALSE}
+# Loop over all combinations of growth_step and interaction
+for (GROWTH_STEP in c(1, 0.01)) {
+  if (GROWTH_STEP < 1) {GD_PERC=TRUE} else {GD_PERC=FALSE}
 
   for (include_interactions in c(FALSE, TRUE)) {
-    title <- paste0("Grow_step: ", GROW_STEP, "; Interactions: ", ifelse(include_interactions, "YES", "NO"))
+    title <- paste0("Grow_step: ", GROWTH_STEP, "; Interactions: ", ifelse(include_interactions, "YES", "NO"))
 
     plot_list1 <- list()
     plot_list2 <- list()
@@ -116,9 +116,9 @@ for (GROW_STEP in c(1, 0.01)) {
       all_timesteps <- diluted_counts
 
       while (sum(this_timestep)+.5 < abun_total) {
-        step          <- check_step(this_timestep, abun_total, GROW_STEP, GD_PERC)
+        step          <- check_step(this_timestep, abun_total, GROWTH_STEP, GD_PERC)
         this_timestep <- growth(x = this_timestep,
-                                grow_step = step,
+                                growth_step = step,
                                 carrying_capacities = new_carrying_capacities,
                                 interactions = as.matrix(new_interactions))
         all_timesteps <- rbind(all_timesteps, this_timestep)
@@ -196,10 +196,10 @@ for (GROW_STEP in c(1, 0.01)) {
         }
 
         while (sum(this_timestep)+.5 < abun_total) {
-          step          <- check_step(this_timestep, abun_total, GROW_STEP, GD_PERC)
+          step          <- check_step(this_timestep, abun_total, GROWTH_STEP, GD_PERC)
 
           this_timestep <- growth(x = this_timestep,
-                                  grow_step = step,
+                                  growth_step = step,
                                   carrying_capacities = new_carrying_capacities,
                                   interactions = as.matrix(new_interactions))
         }
@@ -261,7 +261,7 @@ for (GROW_STEP in c(1, 0.01)) {
   22222223333333
   22222223333333
 "
-    grid_list[[paste0(GROW_STEP, include_interactions)]] <- wrap_plots(
+    grid_list[[paste0(GROWTH_STEP, include_interactions)]] <- wrap_plots(
       grobs = list(textGrob(title, x=.3, y=.5,), plot_time, plot_dilutions),
       ncol = 2) + plot_layout(design = design_panel)
   }

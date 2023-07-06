@@ -18,13 +18,13 @@ their abundance (random). Their growth probability varies depending not
 only on their abundances but also on their carrying capacity.
 
 As opposed to growth_one_group(), the growth rate is given by a logistic
-function and not grow_step. Another difference is that growing species are
+function and not growth_step. Another difference is that growing species are
 not chosen one by one by sampling, but with a binomial function. That means
 that the number of different species and the number of individuals that can
 grow in each iteration of this function is not limited.
 
 The difference with growth() is that growth is logistic in this function and
-there is not grow_step here.
+there is not growth_step here.
 
 If the carrying capacity for a group was surpassed before starting the
 growth cycle, the species of that group will die at a proportionate rate,

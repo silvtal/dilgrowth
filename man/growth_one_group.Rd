@@ -4,13 +4,13 @@
 \alias{growth_one_group}
 \title{growth_one_group}
 \usage{
-growth_one_group(this_timestep, grow_step, interactions = NULL)
+growth_one_group(this_timestep, growth_step, interactions = NULL)
 }
 \arguments{
 \item{this_timestep}{A numeric vector representing the current abundance of
 each organism in the population.}
 
-\item{grow_step}{An integer representing the growth step for organisms in
+\item{growth_step}{An integer representing the growth step for organisms in
 the community, 1 by default.}
 
 \item{interactions}{An optional numeric matrix representing the interaction
@@ -25,6 +25,6 @@ an updated abundances vector that reflects the growth of the community. The
 function calculates the probability of growth for each organism based on
 their current abundance and any specified interactions between organisms. The
 function then randomly selects organisms to grow based on these probabilities
-and increases their abundance by grow_step (1 by default).
+and increases their abundance by growth_step (1 by default).
 The function takes four arguments:
 }

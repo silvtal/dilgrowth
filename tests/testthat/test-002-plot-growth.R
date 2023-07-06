@@ -19,7 +19,7 @@ SAMPLENAMES=c("sa1")
 ## Simulation parameters
 FIXATION_THRESHOLD="1" # relative abundance an OTU needs to have to be considered "fixed"
 DILUTION=0.1
-GROW_STEP=1
+GROWTH_STEP=1
 
 # ==============================================================================
 
@@ -53,9 +53,9 @@ this_timestep <- as.numeric(this_timestep)
 all_timesteps <- diluted_counts
 
 while (sum(this_timestep) < abun_total) {
-  GROW_STEP <- check_step(this_timestep, abun_total, GROW_STEP)
+  GROWTH_STEP <- check_step(this_timestep, abun_total, GROWTH_STEP)
   this_timestep <- growth_one_group(this_timestep,
-                                    GROW_STEP)
+                                    GROWTH_STEP)
   all_timesteps <- rbind(all_timesteps, this_timestep)
 }
 

@@ -12,7 +12,7 @@
 #' @param dilution
 #' @param no_of_dil
 #' @param fixation_at
-#' @param grow_step Number of individuals that grow each timestep (Default: 1)
+#' @param growth_step Number of individuals that grow each timestep (Default: 1)
 #' @param keep_all_timesteps
 #' @param allow_group_extinctions If TRUE, simulations will continue even if one
 #' or more groups go extinct, and the function will try to reach fixation in all
@@ -35,8 +35,8 @@ simulate_timeseries <- function (counts_data,
                                  no_of_dil=12,
                                  fixation_at=1,
                                  abun_total=NULL,
-                                 grow_step=1,
-                                 is_grow_step_a_perc=FALSE,
+                                 growth_step=1,
+                                 is_growth_step_a_perc=FALSE,
                                  keep_all_timesteps=FALSE,
                                  allow_group_extinctions=TRUE,
                                  force_continue=FALSE) {
@@ -130,7 +130,7 @@ simulate_timeseries <- function (counts_data,
       # Growth without groups (growth_one_group())
       # ==========================================
       while (sum(this_timestep) < abun_total) {
-        step          <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
+        step          <- check_step(this_timestep, abun_total, growth_step, is_growth_step_a_perc)
         this_timestep <- growth_one_group(this_timestep,
                                           step,
                                           interactions)
@@ -181,11 +181,11 @@ simulate_timeseries <- function (counts_data,
         }
       } else {
         while (round(sum(this_timestep)) < abun_total) {
-          step          <- check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc)
+          step          <- check_step(this_timestep, abun_total, growth_step, is_growth_step_a_perc)
           this_timestep <- growth(
             x = this_timestep,
             carrying_capacities = carrying_capacities,
-            grow_step = step,
+            growth_step = step,
             interactions = interactions
           )
         }
@@ -199,7 +199,7 @@ simulate_timeseries <- function (counts_data,
     if (keep_all_timesteps){
       # once the growth's finished, the next dilution can happen. But if
       # keep_all_timesteps, we have to save the abundances first
-      trajectory[as.character(dil),] <- this_timestep
+      trajectory[as.character(dil),] <- roundVectorPreservingSum(this_timestep)
     }
 
     # Check again for fixation before next iteration
@@ -215,5 +215,5 @@ simulate_timeseries <- function (counts_data,
   if (keep_all_timesteps){
     return(trajectory)
   } else {
-    return(this_timestep)
+    return(roundVectorPreservingSum(this_timestep))
   }}

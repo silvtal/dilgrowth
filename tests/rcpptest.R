@@ -8,14 +8,14 @@ test_simulate_timeseries_old <- function (counts_data,
                                  dilution=8*10**(-3), # format: 0.1 instead of 10(%)
                                  no_of_dil=12,
                                  abun_total=NULL,
-                                 grow_step=1,
+                                 growth_step=1,
                                  keep_all_timesteps=FALSE,
                                  keep_going=FALSE){
   # This function simulates the changes in abundances for a given initial
   # abundance data. The model has a dilution and growth system. After each
   # dilution, a random organism is duplicated. This happens, by default, until
   # the total abundance reaches the value previous to the dilution. But it can
-  # be changed with the option abun_total. "grow_step" is the number of
+  # be changed with the option abun_total. "growth_step" is the number of
   # individuals that grow each timestep.
 
   # keep_all_timesteps==FALSE saves a bit of RAM if there are many dilutions.
@@ -85,11 +85,11 @@ test_simulate_timeseries_old <- function (counts_data,
     # (1) bugs replicate randomly until reaching the initial abundance; (2) run
     # the substitution
     while (sum(this_timestep) < abun_total) {# si aún debe seguir creciendo
-      if (sum(this_timestep) < grow_step) { # the step is too big, reduce it
+      if (sum(this_timestep) < growth_step) { # the step is too big, reduce it
         step <- max(trunc(sum(this_timestep)/2))
         # warning(paste("Step reduced to",step))
       } else {
-        step <- grow_step
+        step <- growth_step
       }
 
       ## Avoid growing too much (when step>1)
@@ -131,7 +131,7 @@ test_simulate_timeseries_new <- function (counts_data,
                                      no_of_dil=12,
                                      fixation_at=1,
                                      abun_total=NULL,
-                                     grow_step=1,
+                                     growth_step=1,
                                      keep_all_timesteps=FALSE,
                                      force_continue=FALSE) {
 
@@ -191,7 +191,7 @@ test_simulate_timeseries_new <- function (counts_data,
     ns <- names(this_timestep)
     this_timestep <- as.vector(this_timestep)
     while (sum(this_timestep) < abun_total) {
-      this_timestep <- growth(this_timestep, abun_total, grow_step)               # Rcpp function
+      this_timestep <- growth(this_timestep, abun_total, growth_step)               # Rcpp function
     }
     names(this_timestep) <- ns
     dil <- dil + 1
@@ -208,7 +208,7 @@ test_simulate_timeseries_newer <- function (counts_data,
                                  no_of_dil=12,
                                  fixation_at=1,
                                  abun_total=NULL,
-                                 grow_step=1,
+                                 growth_step=1,
                                  keep_all_timesteps=FALSE,
                                  force_continue=FALSE) {
 
@@ -267,7 +267,7 @@ test_simulate_timeseries_newer <- function (counts_data,
     # the substitution
     ns <- names(this_timestep)
     this_timestep <- as.vector(this_timestep)
-    this_timestep <- full_growth(this_timestep, abun_total, grow_step)
+    this_timestep <- full_growth(this_timestep, abun_total, growth_step)
     names(this_timestep) <- ns
     dil <- dil + 1
   }
@@ -285,7 +285,7 @@ b <- test_simulate_timeseries_new(counts_data,
                      dilution=8*10**(-3), # format: 0.1 instead of 10(%)
                      no_of_dil=1200,
                      abun_total=NULL,
-                     grow_step=1)
+                     growth_step=1)
 end_time <- Sys.time()
 print(end_time - start_time)
 
@@ -296,6 +296,6 @@ c <- test_simulate_timeseries_newer(counts_data,
                              dilution=8*10**(-3), # format: 0.1 instead of 10(%)
                              no_of_dil=1200,
                              abun_total=NULL,
-                             grow_step=1)
+                             growth_step=1)
 end_time <- Sys.time()
 print(end_time - start_time)

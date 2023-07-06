@@ -7,8 +7,8 @@
 full_growth(
   this_timestep,
   abun_total,
-  grow_step,
-  is_grow_step_a_perc = FALSE,
+  growth_step,
+  is_growth_step_a_perc = FALSE,
   func = "growth",
   interactions = NULL,
   carrying_capacities = NULL

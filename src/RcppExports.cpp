@@ -26,29 +26,29 @@ BEGIN_RCPP
 END_RCPP
 }
 // growth_one_group
-NumericVector growth_one_group(NumericVector this_timestep, double grow_step, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
-RcppExport SEXP _dilgrowth_growth_one_group(SEXP this_timestepSEXP, SEXP grow_stepSEXP, SEXP interactionsSEXP) {
+NumericVector growth_one_group(NumericVector this_timestep, double growth_step, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
+RcppExport SEXP _dilgrowth_growth_one_group(SEXP this_timestepSEXP, SEXP growth_stepSEXP, SEXP interactionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type this_timestep(this_timestepSEXP);
-    Rcpp::traits::input_parameter< double >::type grow_step(grow_stepSEXP);
+    Rcpp::traits::input_parameter< double >::type growth_step(growth_stepSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type interactions(interactionsSEXP);
-    rcpp_result_gen = Rcpp::wrap(growth_one_group(this_timestep, grow_step, interactions));
+    rcpp_result_gen = Rcpp::wrap(growth_one_group(this_timestep, growth_step, interactions));
     return rcpp_result_gen;
 END_RCPP
 }
 // growth
-NumericVector growth(NumericVector x, NumericVector carrying_capacities, int grow_step, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
-RcppExport SEXP _dilgrowth_growth(SEXP xSEXP, SEXP carrying_capacitiesSEXP, SEXP grow_stepSEXP, SEXP interactionsSEXP) {
+NumericVector growth(NumericVector x, NumericVector carrying_capacities, int growth_step, Rcpp::Nullable<Rcpp::NumericMatrix> interactions);
+RcppExport SEXP _dilgrowth_growth(SEXP xSEXP, SEXP carrying_capacitiesSEXP, SEXP growth_stepSEXP, SEXP interactionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type carrying_capacities(carrying_capacitiesSEXP);
-    Rcpp::traits::input_parameter< int >::type grow_step(grow_stepSEXP);
+    Rcpp::traits::input_parameter< int >::type growth_step(growth_stepSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type interactions(interactionsSEXP);
-    rcpp_result_gen = Rcpp::wrap(growth(x, carrying_capacities, grow_step, interactions));
+    rcpp_result_gen = Rcpp::wrap(growth(x, carrying_capacities, growth_step, interactions));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,33 +66,33 @@ BEGIN_RCPP
 END_RCPP
 }
 // check_step
-int check_step(NumericVector this_timestep, int abun_total, double grow_step, bool is_grow_step_a_perc);
-RcppExport SEXP _dilgrowth_check_step(SEXP this_timestepSEXP, SEXP abun_totalSEXP, SEXP grow_stepSEXP, SEXP is_grow_step_a_percSEXP) {
+int check_step(NumericVector this_timestep, int abun_total, double growth_step, bool is_growth_step_a_perc);
+RcppExport SEXP _dilgrowth_check_step(SEXP this_timestepSEXP, SEXP abun_totalSEXP, SEXP growth_stepSEXP, SEXP is_growth_step_a_percSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type this_timestep(this_timestepSEXP);
     Rcpp::traits::input_parameter< int >::type abun_total(abun_totalSEXP);
-    Rcpp::traits::input_parameter< double >::type grow_step(grow_stepSEXP);
-    Rcpp::traits::input_parameter< bool >::type is_grow_step_a_perc(is_grow_step_a_percSEXP);
-    rcpp_result_gen = Rcpp::wrap(check_step(this_timestep, abun_total, grow_step, is_grow_step_a_perc));
+    Rcpp::traits::input_parameter< double >::type growth_step(growth_stepSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_growth_step_a_perc(is_growth_step_a_percSEXP);
+    rcpp_result_gen = Rcpp::wrap(check_step(this_timestep, abun_total, growth_step, is_growth_step_a_perc));
     return rcpp_result_gen;
 END_RCPP
 }
 // full_growth
-NumericVector full_growth(NumericVector this_timestep, int abun_total, int grow_step, bool is_grow_step_a_perc, String func, Rcpp::Nullable<Rcpp::NumericMatrix> interactions, Rcpp::Nullable<Rcpp::NumericVector> carrying_capacities);
-RcppExport SEXP _dilgrowth_full_growth(SEXP this_timestepSEXP, SEXP abun_totalSEXP, SEXP grow_stepSEXP, SEXP is_grow_step_a_percSEXP, SEXP funcSEXP, SEXP interactionsSEXP, SEXP carrying_capacitiesSEXP) {
+NumericVector full_growth(NumericVector this_timestep, int abun_total, int growth_step, bool is_growth_step_a_perc, String func, Rcpp::Nullable<Rcpp::NumericMatrix> interactions, Rcpp::Nullable<Rcpp::NumericVector> carrying_capacities);
+RcppExport SEXP _dilgrowth_full_growth(SEXP this_timestepSEXP, SEXP abun_totalSEXP, SEXP growth_stepSEXP, SEXP is_growth_step_a_percSEXP, SEXP funcSEXP, SEXP interactionsSEXP, SEXP carrying_capacitiesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type this_timestep(this_timestepSEXP);
     Rcpp::traits::input_parameter< int >::type abun_total(abun_totalSEXP);
-    Rcpp::traits::input_parameter< int >::type grow_step(grow_stepSEXP);
-    Rcpp::traits::input_parameter< bool >::type is_grow_step_a_perc(is_grow_step_a_percSEXP);
+    Rcpp::traits::input_parameter< int >::type growth_step(growth_stepSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_growth_step_a_perc(is_growth_step_a_percSEXP);
     Rcpp::traits::input_parameter< String >::type func(funcSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type interactions(interactionsSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type carrying_capacities(carrying_capacitiesSEXP);
-    rcpp_result_gen = Rcpp::wrap(full_growth(this_timestep, abun_total, grow_step, is_grow_step_a_perc, func, interactions, carrying_capacities));
+    rcpp_result_gen = Rcpp::wrap(full_growth(this_timestep, abun_total, growth_step, is_growth_step_a_perc, func, interactions, carrying_capacities));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -2,7 +2,7 @@
 # This test creates simulation data similarly to test-000, with growth over 10
 # transfers. Also plots the results similarly to test-002-plot-growth.
 # In this case, we'll include a table of species interactions. We also compare
-# with a percentage grow_step.
+# with a percentage growth_step.
 # ==============================================================================
 library("dilgrowth")
 library("tidyverse")
@@ -90,7 +90,7 @@ for (i in 1:2) {
   # ==============================================================================
   # GROUPS, NON-LOGISTIC
 
-  GROW_STEP=1
+  GROWTH_STEP=1
   GD_PERC=FALSE
 
   this_timestep <- as.vector(diluted_counts)
@@ -118,9 +118,9 @@ for (i in 1:2) {
   }
 
   while (sum(this_timestep) < abun_total) {
-    step          <- check_step(this_timestep, abun_total, GROW_STEP, GD_PERC)
+    step          <- check_step(this_timestep, abun_total, GROWTH_STEP, GD_PERC)
     this_timestep <- growth(x = this_timestep,
-                            grow_step = step,
+                            growth_step = step,
                             carrying_capacities = new_carrying_capacities,
                             interactions = as.matrix(new_interactions))
     all_timesteps <- rbind(all_timesteps, this_timestep)
@@ -156,9 +156,9 @@ for (i in 1:2) {
 
 
   # ==============================================================================
-  # GROUPS, NON-LOGISTIC, GROW_STEP 1%
+  # GROUPS, NON-LOGISTIC, GROWTH_STEP 1%
 
-  GROW_STEP <- 0.01
+  GROWTH_STEP <- 0.01
   GD_PERC <- TRUE
 
   this_timestep <- as.vector(diluted_counts)
@@ -186,9 +186,9 @@ for (i in 1:2) {
   }
 
   while (sum(this_timestep) < abun_total) {
-    step          <- check_step(this_timestep, abun_total, GROW_STEP, GD_PERC)
+    step          <- check_step(this_timestep, abun_total, GROWTH_STEP, GD_PERC)
     this_timestep <- growth(x = this_timestep,
-                            grow_step = step,
+                            growth_step = step,
                             carrying_capacities = new_carrying_capacities,
                             interactions = as.matrix(new_interactions))
     all_timesteps <- rbind(all_timesteps, this_timestep)
