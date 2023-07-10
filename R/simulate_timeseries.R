@@ -80,7 +80,7 @@ simulate_timeseries <- function (counts_data,
   # fixation in each group separately
   not_fixated <- !check_for_fixation(this_timestep, carrying_capacities, fixation_at)
 
-  while ((dil < no_of_dil) & not_fixated) {
+  while ((dil < no_of_dil) & any(not_fixated)) {
     ## CASE 1 -- All taxa extinct or almost
     if (trunc(sum(this_timestep)*dilution)==0) {
       if (force_continue) {
@@ -143,7 +143,6 @@ simulate_timeseries <- function (counts_data,
       sum_by_group <- c()
       groups <- unique(names(carrying_capacities))
       for (group in groups) {
-        this_timestep[names(carrying_capacities)==group]
         sum_by_group <- c(sum_by_group, sum(this_timestep[names(carrying_capacities)==group]))
       }
       zero_groups <-  groups[sum_by_group == 0]
@@ -199,7 +198,7 @@ simulate_timeseries <- function (counts_data,
     if (keep_all_timesteps){
       # once the growth's finished, the next dilution can happen. But if
       # keep_all_timesteps, we have to save the abundances first
-      trajectory[as.character(dil),] <- roundVectorPreservingSum(this_timestep)
+      trajectory[as.character(dil),] <- roundVectorPreservingSum(this_timestep, carrying_capacities)
     }
 
     # Check again for fixation before next iteration
@@ -207,13 +206,19 @@ simulate_timeseries <- function (counts_data,
   }
 
   # If the loop has stopped because of fixation
-  if (not_fixated == FALSE) {
-    write(paste0(fixation_at*100, "% fixation of ",
+  if (all(not_fixated) == FALSE) { # if all fixated
+    if (is.null(carrying_capacities)) {
+      write(paste0(fixation_at*100, "% fixation of ",
                  ns[this_timestep!=0], " after ", dil, " dilutions."), stdout())
+    } else {
+      write(paste0(fixation_at*100, "% fixation of ", groups[!not_fixated], " after ", dil, " dilutions."))
+    }
+
   }
 
   if (keep_all_timesteps){
-    return(trajectory)
+    return(trajectory) # does not round here; exact trajectory returned as it was
   } else {
-    return(roundVectorPreservingSum(this_timestep))
-  }}
+    return(roundVectorPreservingSum(this_timestep, carrying_capacities))
+  }
+}

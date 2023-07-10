@@ -4,12 +4,14 @@
 # interactions and others won't. Some will have a fixed growth_step value (1) and
 # others will have a proggressive one (1%).
 # ==============================================================================
+set.seed(47)
 
 library("dilgrowth")
 library("tidyverse")
 library("patchwork")
 library("grid")
 library("gridExtra")
+library("ggrepel")
 
 # ==============================================================================
 ## Simulation parameters
@@ -67,7 +69,7 @@ for (GROWTH_STEP in c(1, 0.01)) {
   if (GROWTH_STEP < 1) {GD_PERC=TRUE} else {GD_PERC=FALSE}
 
   for (include_interactions in c(FALSE, TRUE)) {
-    title <- paste0("Grow_step: ", GROWTH_STEP, "; Interactions: ", ifelse(include_interactions, "YES", "NO"))
+    title <- paste0("Growth step: ", GROWTH_STEP, "; Interactions: ", ifelse(include_interactions, "YES", "NO"))
 
     plot_list1 <- list()
     plot_list2 <- list()
@@ -117,39 +119,43 @@ for (GROWTH_STEP in c(1, 0.01)) {
 
       while (sum(this_timestep)+.5 < abun_total) {
         step          <- check_step(this_timestep, abun_total, GROWTH_STEP, GD_PERC)
-        this_timestep <- growth(x = this_timestep,
-                                growth_step = step,
-                                carrying_capacities = new_carrying_capacities,
-                                interactions = as.matrix(new_interactions))
+        this_timestep <-growth(x = this_timestep,
+                               growth_step = step,
+                               carrying_capacities = new_carrying_capacities,
+                               interactions = as.matrix(new_interactions))
         all_timesteps <- rbind(all_timesteps, this_timestep)
       }
 
       # PLOT
 
-      leaf_to_pcg <- names(new_carrying_capacities)
-      names(leaf_to_pcg) <- names(diluted_counts)
+      leaf_to_Group <- names(new_carrying_capacities)
+      names(leaf_to_Group) <- names(diluted_counts)
 
       # reshape the data into a long format
-      all_timesteps <- data.frame(all_timesteps, check.names = F)
+      all_timesteps <- data.frame(roundVectorPreservingSum(all_timesteps), check.names = F)
       all_timesteps$time <- 1:nrow(all_timesteps)
       df_long_time <- tidyr::gather(all_timesteps, key = "variable", value = "value", -time)
 
-      # add a column to indicate the PCG name
-      df_long_time$PCG <- leaf_to_pcg[paste0(df_long_time$variable)]
+      # add a column to indicate the Group name
+      df_long_time$Group <- leaf_to_Group[paste0(df_long_time$variable)]
 
       # create plot
-      plot_list1[[i]] <- ggplot(df_long_time, aes(x = time, y = value, group = variable, color = PCG)) +
+      plot_list1[[i]] <- ggplot(df_long_time, aes(x = time, y = value, group = variable, color = Group)) +
         geom_line() +
         scale_x_continuous(limits = c(min(df_long_time$time), max(df_long_time$time))) +
         labs(x = "Time", y = "value") +
-        geom_text(data = subset(df_long_time, time == max(time)),
-                  aes(label = variable, color = PCG),
-                  nudge_x = 40, nudge_y = 40, size = 2) +
+        geom_label_repel(data = subset(df_long_time, time == max(time)),
+                         aes(label = variable, color = Group),
+                         fill = "white", alpha = 0.8,
+                         label.padding = unit(0.1, "lines"),
+                         # nudge_x = 35, nudge_y = 40,
+                         size = 2,
+                         force =0.1, arrow = arrow(type = "open", length = unit(0.02, "npc"), angle = 15)) +
         scale_color_manual(values = colors1) +
-        xlab("Time step") +
+        xlab("Step") +
         ylab("Abundance") +
         theme(legend.position = "bottom")
-      }
+    }
 
 
 
@@ -207,25 +213,25 @@ for (GROWTH_STEP in c(1, 0.01)) {
 
         # PLOT
 
-        leaf_to_pcg <- names(new_carrying_capacities)
-        names(leaf_to_pcg) <- names(diluted_counts)
+        leaf_to_Group <- names(new_carrying_capacities)
+        names(leaf_to_Group) <- names(diluted_counts)
 
         # reshape the data into a long format
         all_dilutions <- data.frame(all_dilutions, check.names = F)
         all_dilutions$time <- 1:nrow(all_dilutions)
         df_long <- tidyr::gather(all_dilutions, key = "variable", value = "value", -time)
 
-        # add a column to indicate the PCG name
-        df_long$PCG <- leaf_to_pcg[df_long$variable]
+        # add a column to indicate the Group name
+        df_long$Group <- leaf_to_Group[df_long$variable]
 
         # create plot
-        plot_list2[[i]] <- ggplot(df_long, aes(x = time, y = value, group = variable, color = PCG)) +
+        plot_list2[[i]] <- ggplot(df_long, aes(x = time, y = value, group = variable, color = Group)) +
           geom_line() +
           scale_x_continuous(limits = c(min(df_long$time), max(df_long$time))) +
           labs(x = "Time", y = "value") +
           geom_text(data = subset(df_long, time == max(time)),
-                    aes(label = variable, color = PCG),
-                    nudge_x = 40, nudge_y = 40, size = 2) +
+                    aes(label = variable, color = Group),
+                    hjust = -0.1, vjust = -1, size = 2) +
           scale_color_manual(values = colors2) +
           xlab("Dilution number") +
           ylab("Abundance") +
@@ -273,6 +279,6 @@ all_grids <- wrap_plots(
   convention = "keep"
 )
 
-pdf("../testresults/test-004.pdf", height = 22, width = 12)
+pdf("../testresults/test-004.pdf", height = 22, width = 14)
 all_grids
 dev.off()

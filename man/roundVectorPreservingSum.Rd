@@ -4,7 +4,7 @@
 \alias{roundVectorPreservingSum}
 \title{roundVectorPreservingSum}
 \usage{
-roundVectorPreservingSum(vector)
+roundVectorPreservingSum(vector, carrying_capacities = NULL)
 }
 \arguments{
 \item{vector}{}
@@ -19,6 +19,13 @@ it randomly selects elements from the rounded vector and adjusts their values
 to preserve the sum of the original vector.
 }
 \details{
+If carrying_capacities is not null, this is done in a group by group fashion.
+
+This function is tailored for this specific application, and our abundance
+vectors will always sum an integer. But in the case it was given a vector
+which sum totals a decimal number (i. e. 20.2), the resulting vector will not
+have the same total value but a rounded one (i. e. 20)]
+
 This is needed to avoid decimals in the final simulated communities when
 simulating multiple functional groups.
 }
