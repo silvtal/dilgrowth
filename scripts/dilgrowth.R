@@ -68,8 +68,8 @@ start_time <- Sys.time()
 # ===========
 # mis datos [glc]
 # ===========
-library("tidyverse")
-library("dilgrowth")
+library("tidyverse", exclude = c("purrr:transpose"))
+library("dilgrowth") #> includes data.table::transpose
 library("gsubfn")
 library("parallel")
 library("optparse")
@@ -233,7 +233,7 @@ if (abun_total == 0) {
       names(carrying_capacities)[rownames(counts) %in% leaves] <- pcg_table$Core[group]
       carrying_capacities[rownames(counts) %in% leaves]        <- (pcg_table$Average[group] * abun_total) %>% round
     }
-    message(paste0("Simulating logistic growth for groups: ", paste0(c(unique(pcg_table$Core), "others"), collapse = ", "), "."))
+    message(paste0("Simulating growth for groups: ", paste0(unique(names(carrying_capacities)), collapse = ", "), "."))
   } else {
     carrying_capacities=NULL
     message("No PCG table provided; simulating growth without groups")

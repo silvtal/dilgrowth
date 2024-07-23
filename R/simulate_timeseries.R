@@ -40,8 +40,6 @@ simulate_timeseries <- function (counts_data,
                                  keep_all_timesteps=FALSE,
                                  allow_group_extinctions=TRUE,
                                  force_continue=FALSE) {
-  already_excluded <- c() # we'll exclude groups with total abundance of 0
-  if (!is.null(already_excluded)) {warning(paste("Group(s) absent from starting data:", already_excluded))}
 
   # counts_data puede ser un string o un dataframe de una columna como en el wrapper de /simuls
   if (is.atomic(counts_data)) {
@@ -74,6 +72,11 @@ simulate_timeseries <- function (counts_data,
 
   this_timestep <- start
   dil <- 0
+
+  # this empty vector will be used for reporting extinct groups in the end
+  if(allow_group_extinctions) {
+    all_zero_groups <- c()
+  }
 
   # Check if fixation has occured already (if it has, simulations stop)
   # When checking for fixation, if there are multiple groups we must check for
@@ -109,10 +112,10 @@ simulate_timeseries <- function (counts_data,
         size = sum(this_timestep)*dilution,
         replace = TRUE,
         prob = this_timestep))])
-      # We do this trick to keep all species "entries", even if they're 0 after
+      # We do this trick to keep all species' "entries", even if they're 0 after
       # diluting. It's important for being able to put all timesteps together
       # into a trajectory variable/file (keep_all_timesteps==TRUE) and for
-      # saving multiple simulations together into a table
+      # saving multiple simulations together into a table:
       temp <- empty
       temp[names(this_timestep)] <- this_timestep
       this_timestep <- temp[names(empty)]
@@ -147,21 +150,16 @@ simulate_timeseries <- function (counts_data,
       }
       zero_groups <-  groups[sum_by_group == 0]
 
-      # If there are zero groups (these do not count the ones in "already_excluded" originally!)
-      if (length(zero_groups) > 0) {
+      # If there are zero groups (note: we don't check if they were extinct from the start)
+      if (length(zero_groups[!(zero_groups %in% all_zero_groups)]) > 0) {
         if (!allow_group_extinctions) {# If not allowed, stop()
           stop(paste0("Some group(s) have gone extinct (", zero_groups, "). Stopping the simulations..."))
-        } else { # If they are allowed, redefine abun_total
-          for (zg in zero_groups) {
-            if (!(zg %in% already_excluded)) {
-              abun_total <- abun_total - carrying_capacities[zg][[1]]
-              already_excluded <- c(already_excluded, zg)
-              message(paste0("WARNING: The following group has no abundance and was excluded: ", zg, ". Adjusting abun_total to ", abun_total, " accordingly."))
-            }
-          }
+        } else {
+          message(paste0("WARNING: The following group or groups went extinct in transfer number ", dil, ": ", paste(zero_groups, collapse = ", "), "."))
         }
+        all_zero_groups <- unique(c(all_zero_groups, zero_groups))
       }
-      # Choose growth function; we could use "empty" groups for speed reasons;
+      # Apply growth function; we could use "empty" groups for speed reasons;
       # that is, redefining carrying_capacity and interactions so they don't
       # contain species from zero groups. But it's not necessary.
       # The important bit is to redefine abun_total to avoid an infinite loop.
@@ -205,15 +203,19 @@ simulate_timeseries <- function (counts_data,
     not_fixated <- !check_for_fixation(this_timestep, carrying_capacities, fixation_at)
   }
 
-  # If the loop has stopped because of fixation
-  if (all(not_fixated) == FALSE) { # if all fixated
-    if (is.null(carrying_capacities)) {
-      write(paste0(fixation_at*100, "% fixation of ",
-                 ns[this_timestep!=0], " after ", dil, " dilutions."), stdout())
-    } else {
-      write(paste0(fixation_at*100, "% fixation of ", groups[!not_fixated], " after ", dil, " dilutions."))
+  # Report fixation and extinction after the dilgrowth loop
+  if (!is.null(carrying_capacities)) {
+    message(paste0(fixation_at*100, "% fixation of ", paste(groups[!not_fixated], collapse = ", "), " after ", dil, " dilutions."))
+    write(paste0(fixation_at*100, "% fixation of ", groups[!not_fixated], " after ", dil, " dilutions."))
+    if (length(zero_groups) > 0) {
+      message(paste0("The following group or groups went extinct: ", paste(all_zero_groups, collapse = ", "), "."))
+      write(paste0("The following group or groups went extinct: ", paste(all_zero_groups, collapse = ", "), "."))
     }
-
+  } else {
+    if (!not_fixated) {
+      write(paste0(fixation_at*100, "% fixation reached after ", dil, " dilutions."), stdout())
+      # write(paste0(fixation_at*100, "% fixation of ", ns[this_timestep!=0], " after ", dil, " dilutions."), stdout())
+    }
   }
 
   if (keep_all_timesteps){

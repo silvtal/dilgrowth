@@ -31,11 +31,11 @@ check_for_fixation <- function(this_timestep, carrying_capacities, fixation_at) 
     names(df) <- c("groups", "abundances", "total_abundances")
 
     max_abundances <- aggregate(abundances ~ groups, df, max)
-    # Check if any element in the groups vector surpasses 50% of the within-group total abundance
+    # Check if any element in the groups vector surpasses fixation_at% of the within-group total abundance
     # Check for each group
     fixated <- sapply(unique(df$groups), function(gg) {
       group_df <- df[df$groups == gg, ]
-      any(group_df$abundances >= 0.5 * group_df$total_abundances)
+      any(group_df$abundances >= fixation_at * group_df$total_abundances)
     })
   }
   return(fixated)
