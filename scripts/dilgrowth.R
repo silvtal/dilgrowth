@@ -68,7 +68,7 @@ start_time <- Sys.time()
 # ===========
 # mis datos [glc]
 # ===========
-library("tidyverse", exclude = c("purrr:transpose"))
+library("tidyverse", exclude = c("purrr::transpose"))
 library("dilgrowth") #> includes data.table::transpose
 library("gsubfn")
 library("parallel")
