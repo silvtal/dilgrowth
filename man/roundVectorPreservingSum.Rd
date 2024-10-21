@@ -9,9 +9,6 @@ roundVectorPreservingSum(vector, carrying_capacities = NULL)
 \arguments{
 \item{vector}{}
 }
-\value{
-
-}
 \description{
 This function rounds the input vector and then calculates the difference in
 the sum of the original vector and the rounded vector. To fix this difference,

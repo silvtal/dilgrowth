@@ -4,26 +4,34 @@
 \alias{check_for_fixation}
 \title{check_for_fixation}
 \usage{
-check_for_fixation(this_timestep, carrying_capacities, fixation_at)
+check_for_fixation(
+  this_timestep,
+  carrying_capacities,
+  fixation_at,
+  extinction_equals_fixation = FALSE
+)
 }
 \arguments{
 \item{this_timestep}{abundance vector}
 
-\item{fixation_at}{fixation threshold}
-}
-\value{
+\item{carrying_capacities}{information about the groups each species belongs to}
 
+\item{fixation_at}{fixation threshold}
+
+\item{extinction_equals_fixation}{if TRUE, groups with an abundance of 0 will be considered fixated}
 }
 \description{
 Checks for fixation. If there's one group (no PCG table), fixation occurs
 when the relative abundance of one of the elements/species on the abundance
 vector reaches a given fixation threshold (value from 0 to 1). If there are
-multiple groups (PCG table given), fixation occurs when ALL groups reach
-fixation, meaning there's one species in every group that has reached the
-fixation threshold within that group.
+multiple groups (PCG table given), fixation is checked for each group
+individually.
+Total fixation occurs when ALL groups reach fixation, meaning there's one
+species in every group that has reached the fixation threshold within that
+group. Total fixation is not evaluated in this function
 }
 \examples{
-this_timestep= c(20, 20, 20, 10, 10, 80)
+this_timestep=c(20, 20, 20, 10, 10, 80)
 carrying_capacities=c(100, 100, 100, 100, 100, 100)
 names(carrying_capacities)=c("g1", "g1", "g1", "g2", "g2", "g2")
 fixation_at <- 0.5

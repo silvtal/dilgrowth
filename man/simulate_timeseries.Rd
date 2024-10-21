@@ -35,9 +35,6 @@ strong dilution. This takes one random bug in order to continue, even when it
 was actually diluted out. Affects the entire community, not each individual
 functional group.}
 }
-\value{
-
-}
 \description{
 Main function. Simulates the changes in abundances for a given initial
 abundance data. The model has a dilution and growth system. After each

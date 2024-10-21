@@ -30,9 +30,6 @@ create_counts(
 
 \item{sa}{Sample name tag column name in map}
 }
-\value{
-
-}
 \description{
 This function parses and puts together in a list of data.frames all the
 count data for time series abundance data. For each timestep / transfer, it
