@@ -83,6 +83,18 @@ simulate_timeseries <- function (counts_data,
   # fixation in each group separately
   not_fixated <- !check_for_fixation(this_timestep, carrying_capacities, fixation_at)
 
+  # Create "groups" and "zero_groups" if needed before the loop. Sometimes the
+  # loop could be skipped
+  if (!is.null(carrying_capacities)) {
+    groups <- unique(names(carrying_capacities))
+    sum_by_group <- c()
+    zero_groups <-  groups[sum_by_group == 0]
+    for (group in groups) {
+      sum_by_group <- c(sum_by_group, sum(this_timestep[names(carrying_capacities)==group]))
+    }
+    zero_groups <-  groups[sum_by_group == 0]
+  }
+
   while ((dil < no_of_dil) & any(not_fixated)) {
     ## CASE 1 -- All taxa extinct or almost
     if (trunc(sum(this_timestep)*dilution)==0) {
@@ -143,8 +155,6 @@ simulate_timeseries <- function (counts_data,
       # Growth by group (growth() / growth_log())
       # =========================================
       # Check if any group has no abundance
-      sum_by_group <- c()
-      groups <- unique(names(carrying_capacities))
       for (group in groups) {
         sum_by_group <- c(sum_by_group, sum(this_timestep[names(carrying_capacities)==group]))
       }
