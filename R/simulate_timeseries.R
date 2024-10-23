@@ -231,6 +231,6 @@ simulate_timeseries <- function (counts_data,
   if (keep_all_timesteps){
     return(trajectory) # does not round here; exact trajectory returned as it was
   } else {
-    return(roundVectorPreservingSum(this_timestep, carrying_capacities))
+    return(roundVectorPreservingSum(unlist(this_timestep), carrying_capacities))
   }
 }
