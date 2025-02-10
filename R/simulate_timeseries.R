@@ -161,13 +161,15 @@ simulate_timeseries <- function (counts_data,
       zero_groups <-  groups[sum_by_group == 0]
 
       # If there are zero groups (note: we don't check if they were extinct from the start)
-      if (length(zero_groups[!(zero_groups %in% all_zero_groups)]) > 0) {
+      if (length(zero_groups > 0)) {
         if (!allow_group_extinctions) {# If not allowed, stop()
           stop(paste0("Some group(s) have gone extinct (", zero_groups, "). Stopping the simulations..."))
         } else {
-          message(paste0("WARNING: The following group or groups went extinct in transfer number ", dil, ": ", paste(zero_groups, collapse = ", "), "."))
+          if (length(zero_groups[!(zero_groups %in% all_zero_groups)]) > 0) {
+            message(paste0("WARNING: The following group or groups went extinct in transfer number ", dil, ": ", paste(zero_groups, collapse = ", "), "."))
+            all_zero_groups <- unique(c(all_zero_groups, zero_groups))
+          }
         }
-        all_zero_groups <- unique(c(all_zero_groups, zero_groups))
       }
       # Apply growth function; we could use "empty" groups for speed reasons;
       # that is, redefining carrying_capacity and interactions so they don't
@@ -218,8 +220,13 @@ simulate_timeseries <- function (counts_data,
     message(paste0(fixation_at*100, "% fixation of ", paste(groups[!not_fixated], collapse = ", "), " after ", dil, " dilutions."))
     write(paste0(fixation_at*100, "% fixation of ", groups[!not_fixated], " after ", dil, " dilutions."))
     if (length(zero_groups) > 0) {
-      message(paste0("The following group or groups went extinct: ", paste(all_zero_groups, collapse = ", "), "."))
-      write(paste0("The following group or groups went extinct: ", paste(all_zero_groups, collapse = ", "), "."))
+      if (allow_group_extinctions) {
+        message(paste0("The following group or groups went extinct: ", paste(all_zero_groups, collapse = ", "), "."))
+        write(paste0("The following group or groups went extinct: ", paste(all_zero_groups, collapse = ", "), "."))
+      } else {
+        message(paste0("The following group or groups went extinct: ", paste(zero_groups, collapse = ", "), "."))
+        write(paste0("The following group or groups went extinct: ", paste(zero_groups, collapse = ", "), "."))
+      }
     }
   } else {
     if (!not_fixated) {
