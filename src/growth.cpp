@@ -127,7 +127,7 @@ NumericVector growth(NumericVector x,
     Rf_error("After accounting for interactions, all probabilities became 0. No growth possible. Check the interaction matrix.");
   }
 
-  // Growth per group
+  // Growth per group // TODO: parallelization
   for (String group : groups) {
     // indexing vector for this group
     LogicalVector g(size); // size is size of x! groups.size() is the # of groups
@@ -147,7 +147,7 @@ NumericVector growth(NumericVector x,
       }
     }
     sum_group = trunc(sum_group);
-    int step = min(static_cast<int>(growth_step), static_cast<int>(sum_group)); // TODO
+    int step = min(static_cast<int>(growth_step), static_cast<int>(sum_group)); // NOTE: this is done within check_step already, but not for each group separately
 
     // Stop if no one can grow in this group
     if (sum(group_prob)==0) {
