@@ -4,6 +4,19 @@ This package includes command line scripts and standalone R/C++ functions for si
 
 ![Growth–dilution workflow](process_fig.svg)
 
+## Installation
+
+To install `dilgrowth`, you can use the `devtools` package to install it directly from GitHub.Simply run the following commands in your R console:
+
+```r
+if (!require("devtools")) install.packages("devtools")
+devtools::install_github("silvtal/dilgrowth")
+```
+
+After installation, you can load the package using `library(dilgrowth)`.
+
+Note: The `dilgrowth` package uses C++ functions (via Rcpp) for computationally intensive operations, so you may need to have a C++ compiler installed on your system.
+
 ## Simulation Workflow
 
 Each simulation starts from a user-provided abundance vector (i.e. one column of a community table). Optionally, functional-group metadata specifies carrying capacities that bound growth for each group. A single run cycles through:
